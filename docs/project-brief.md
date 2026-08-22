@@ -48,43 +48,47 @@ The application should return a manageable set of approximately 3–5 recommende
 
 The recommendation should feel informative rather than artificially perfect. Where useful, the app should explain a potential mismatch or trade-off so the user can make a more confident purchase decision.
 
-## MVP out of scope
-The following are intentionally excluded from the first release:
+## MVP scope
+The MVP will focus on one complete recommendation journey: a user answers the six core questions, the application evaluates suitable games using transparent recommendation logic, and the user receives a small set of explainable recommendations.
+
+The MVP will not include:
 - user accounts or login
 - saved favourites or recommendation history
 - personal game collection import
 - social features or reviews
 - AI-powered recommendation input
-- shopping links or price comparison
-- proximity-based store discovery or local stock availability
-- advanced filtering or search
+- shopping links, price comparison or local availability
+- advanced filtering or search tools
 - multiplayer group profiles
-- native mobile app
-- machine-learning recommendation model
+- a native mobile application
+- a machine-learning recommendation model
 
-These may be explored later if they support the product without making the core experience more complicated.
+These may be considered after the core recommendation experience is working and tested.
 
 ## Future direction: AI-assisted recommendations
 AI is explicitly out of scope for the MVP, but may be explored in a later phase. Potential uses include:
 - interpreting natural-language requests such as “something clever but not exhausting”
 - translating vague preferences into recommendation criteria
-- generating richer plain-English explanations from structured recommendation data
+- generating richer plain-English explanations from structured recommendation results
 - identifying themes or similarities that are difficult to express through fixed filters alone
 - combining several user preferences into a more conversational recommendation experience
 
 The core recommendation logic should remain transparent and testable. AI should augment the recommendation system rather than make the central ranking process opaque.
 
+### BGG data constraint for future AI work
+BoardGameGeek's current XML API terms prohibit using BGG API or site data to train AI or LLM systems. Any future AI-assisted feature must therefore be designed so it does not train a model on BGG data, and any use of BGG-derived information with an AI system must be reviewed against the then-current BGG terms before implementation.
+
 ## Future direction: shopping and local availability
-A later version could help users act on a recommendation immediately by showing where a game can be purchased.
+A later version could help users act on a recommendation by comparing ways to buy the game. This should consider more than lowest price.
 
 Potential features include:
-- online shopping links
-- price comparison
-- nearby retailers that stock the game
-- distance or proximity-based store sorting
-- indication of whether the game is available for same-day purchase or pickup
+- online price comparison
+- nearby game retailers
+- local stock availability
+- distance or proximity from the user
+- same-day pickup or “available today” options
 
-This feature should recognise that the cheapest option is not always the most useful one. Some users may prefer a nearby store because they want the game immediately rather than waiting for delivery.
+This reflects a real purchase trade-off: some customers will pay more for a game if they can obtain it locally today rather than wait for delivery. Any future retailer integration, affiliate links, advertising or other monetisation would require a fresh review of BGG's commercial-use terms before implementation.
 
 ## Portfolio goals
 This project should demonstrate:
