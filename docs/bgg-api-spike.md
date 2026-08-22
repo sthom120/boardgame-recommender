@@ -96,6 +96,72 @@ Sources:
 5. **Game style / mechanics** — BGG mechanics and categories can provide structured source data, but the UI should translate them into plain language for the target user.
 6. **Age appropriateness** — BGG provides publisher minimum age and community suggested-age data. We need to test how reliable these are and decide which should be preferred.
 
+## Proposed internal game-data model
+
+The rest of the application should not consume raw BGG XML. The BGG integration layer should parse external data into a predictable internal object before the recommendation engine or frontend uses it.
+
+Illustrative shape:
+
+```js
+{
+  bggId: 266192,
+  name: "Wingspan",
+  yearPublished: 2019,
+
+  players: {
+    min: 1,
+    max: 5,
+    communityBest: [3]
+  },
+
+  playTime: {
+    minMinutes: 40,
+    maxMinutes: 70
+  },
+
+  age: {
+    publisherMinimum: 10,
+    communitySuggested: 10
+  },
+
+  complexity: {
+    averageWeight: 2.47
+  },
+
+  categories: [],
+  mechanics: [],
+
+  rating: {
+    average: null,
+    bayesAverage: null,
+    rank: null,
+    usersRated: null
+  },
+
+  media: {
+    imageUrl: null,
+    thumbnailUrl: null
+  },
+
+  source: {
+    provider: "BoardGameGeek",
+    fetchedAt: null
+  }
+}
+```
+
+This model is deliberately close to source facts. User-facing concepts such as `mood`, beginner-friendly complexity labels, recommendation match scores and explanatory text should be created in separate application logic rather than mixed into the imported BGG record.
+
+### Why this separation matters
+- The frontend and recommendation engine receive consistent JSON instead of BGG-specific XML structures.
+- XML parsing and BGG field names remain isolated in one integration layer.
+- If BGG changes its response structure, fewer parts of the application need to change.
+- Source facts can be distinguished from our own derived recommendation logic.
+- The internal model can be validated and tested independently.
+- Cached records can use the same model regardless of whether they came from a fresh BGG request or storage.
+
+This decision is documented separately in `docs/adr/001-normalise-bgg-data.md`.
+
 ## Questions still to answer
 - Which exact XML fields are returned once our application token is active?
 - Are BGG's minimum age and play-time values reliable enough for recommendations across different game types?
@@ -118,7 +184,7 @@ Use several different types of games so the data model is not designed around on
 
 Exact titles will be selected during testing.
 
-## Proposed direction (not yet an accepted architecture decision)
+## Proposed direction (not yet an accepted overall architecture decision)
 
 ```text
 React frontend
@@ -139,4 +205,4 @@ Our Node/Express API
 This remains provisional until the technical spike is complete.
 
 ## Status
-In progress. BGG application registration has been submitted and is pending approval. Documentation research indicates strong support for most structured MVP inputs, while experience/mood will require our own derived mapping layer. Authenticated endpoint testing remains outstanding.
+In progress. BGG application registration has been submitted and is pending approval. Documentation research indicates strong support for most structured MVP inputs, while experience/mood will require our own derived mapping layer. A proposed internal game-data model now exists; authenticated endpoint testing remains outstanding.
