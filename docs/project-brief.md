@@ -20,6 +20,18 @@ The user faces too many board-game choices and does not know where to start. The
 2. Recommendations need to suit the user's actual situation, such as player count, available time and desired level of complexity.
 3. The user needs to understand why a game is being recommended so they can feel confident that it is a suitable purchase.
 
+## Initial MVP recommendation inputs
+The first useful version should ask for six core inputs:
+1. Number of players
+2. Available play time
+3. Desired complexity
+4. Type of experience or mood
+5. Preferred game style or mechanics
+6. Age appropriateness
+
+### UX principle for inputs
+Because the primary user may not know board-game terminology, recommendation questions should use plain language. Technical terms such as specific mechanics should be translated into understandable descriptions or examples rather than assumed knowledge.
+
 ## Portfolio goals
 This project should demonstrate:
 - requirements and product planning
@@ -42,7 +54,7 @@ These are starting assumptions:
 - Persistence will only be added if a clear feature requires it.
 
 ## Questions to resolve during discovery
-- Which preferences should affect recommendations?
+- What should each recommendation result contain?
 - What belongs in the MVP and what should wait?
 - Which BGG fields are reliable enough for recommendation logic?
 - What caching, retry and throttling strategy will be required?
