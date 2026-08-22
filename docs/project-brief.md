@@ -9,6 +9,12 @@ Build a portfolio-quality web application that recommends board games using Boar
 ## Core idea
 Users describe the kind of game experience they want, such as player count, available time, preferred complexity, mechanics or style. The application ranks suitable games and explains why each recommendation fits.
 
+## Primary user
+A casual or relatively inexperienced board-game player who wants to buy a new game but does not have enough game knowledge to confidently choose one.
+
+## Core problem
+The user faces too many board-game choices and does not know where to start. The application should reduce that choice overload by asking a small number of understandable questions and narrowing the available options to a manageable set of suitable recommendations.
+
 ## Portfolio goals
 This project should demonstrate:
 - requirements and product planning
@@ -31,8 +37,7 @@ These are starting assumptions:
 - Persistence will only be added if a clear feature requires it.
 
 ## Questions to resolve during discovery
-- Who is the primary user?
-- What problem should the first version solve particularly well?
+- What are the user's most important needs when choosing a game?
 - Which preferences should affect recommendations?
 - What belongs in the MVP and what should wait?
 - Which BGG fields are reliable enough for recommendation logic?
