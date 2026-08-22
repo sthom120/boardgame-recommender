@@ -15,6 +15,10 @@ A casual or relatively inexperienced board-game player who wants to buy a new ga
 ## Core problem
 The user faces too many board-game choices and does not know where to start. The application should reduce that choice overload by asking a small number of understandable questions and narrowing the available options to a manageable set of suitable recommendations.
 
+## Key user needs
+1. The user needs an easy starting point without requiring existing board-game knowledge.
+2. Recommendations need to suit the user's actual situation, such as player count, available time and desired level of complexity.
+
 ## Portfolio goals
 This project should demonstrate:
 - requirements and product planning
@@ -37,7 +41,7 @@ These are starting assumptions:
 - Persistence will only be added if a clear feature requires it.
 
 ## Questions to resolve during discovery
-- What are the user's most important needs when choosing a game?
+- What third user need is most important when choosing a game?
 - Which preferences should affect recommendations?
 - What belongs in the MVP and what should wait?
 - Which BGG fields are reliable enough for recommendation logic?
