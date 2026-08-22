@@ -32,6 +32,32 @@ The first useful version should ask for six core inputs:
 ### UX principle for inputs
 Because the primary user may not know board-game terminology, recommendation questions should use plain language. Technical terms such as specific mechanics should be translated into understandable descriptions or examples rather than assumed knowledge.
 
+## Initial MVP recommendation output
+The application should return a manageable set of approximately 3–5 recommended games. Each recommendation should include:
+- game name and image
+- match score or strength of match
+- short plain-English description
+- explanation of why the game suits the user's answers
+- player count
+- play time
+- complexity
+- age recommendation
+- main style or experience
+- one useful caveat or “good to know” point where appropriate
+- link to the BoardGameGeek page
+
+The recommendation should feel informative rather than artificially perfect. Where useful, the app should explain a potential mismatch or trade-off so the user can make a more confident purchase decision.
+
+## Future direction: AI-assisted recommendations
+AI is explicitly out of scope for the MVP, but may be explored in a later phase. Potential uses include:
+- interpreting natural-language requests such as “something clever but not exhausting”
+- translating vague preferences into recommendation criteria
+- generating richer plain-English explanations from structured recommendation data
+- identifying themes or similarities that are difficult to express through fixed filters alone
+- combining several user preferences into a more conversational recommendation experience
+
+The core recommendation logic should remain transparent and testable. AI should augment the recommendation system rather than make the central ranking process opaque.
+
 ## Portfolio goals
 This project should demonstrate:
 - requirements and product planning
@@ -54,7 +80,6 @@ These are starting assumptions:
 - Persistence will only be added if a clear feature requires it.
 
 ## Questions to resolve during discovery
-- What should each recommendation result contain?
 - What belongs in the MVP and what should wait?
 - Which BGG fields are reliable enough for recommendation logic?
 - What caching, retry and throttling strategy will be required?
