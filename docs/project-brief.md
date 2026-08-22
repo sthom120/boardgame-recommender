@@ -23,7 +23,7 @@ This project should demonstrate:
 - deployment and retrospective reflection
 
 ## Current assumptions
-These are starting assumptions, not final decisions.
+These are starting assumptions:
 - React + Vite is a likely frontend choice.
 - Node.js + Express is a likely backend choice.
 - BoardGameGeek XML API2 will be the primary external game-data source.
@@ -40,4 +40,4 @@ These are starting assumptions, not final decisions.
 - Will accounts or saved preferences add enough value to justify persistence?
 
 ## Success criteria
-A successful final project should be understandable to a recruiter from the repository alone, usable as a deployed application, and supported by visible evidence of planning, implementation, testing, debugging and reflection.
+A successful final project should be understandable from the repository alone, usable as a deployed application, and supported by visible evidence of planning, implementation, testing, debugging and reflection.
