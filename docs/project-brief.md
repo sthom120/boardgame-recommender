@@ -18,6 +18,7 @@ The user faces too many board-game choices and does not know where to start. The
 ## Key user needs
 1. The user needs an easy starting point without requiring existing board-game knowledge.
 2. Recommendations need to suit the user's actual situation, such as player count, available time and desired level of complexity.
+3. The user needs to understand why a game is being recommended so they can feel confident that it is a suitable purchase.
 
 ## Portfolio goals
 This project should demonstrate:
@@ -41,7 +42,6 @@ These are starting assumptions:
 - Persistence will only be added if a clear feature requires it.
 
 ## Questions to resolve during discovery
-- What third user need is most important when choosing a game?
 - Which preferences should affect recommendations?
 - What belongs in the MVP and what should wait?
 - Which BGG fields are reliable enough for recommendation logic?
