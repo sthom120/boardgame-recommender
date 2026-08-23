@@ -420,7 +420,7 @@ The wireframe illustrates:
 
 # Current Status
 
-The core MVP:
+The following core MVP elements have now been defined:
 
 - landing screen
 - questionnaire structure
@@ -430,6 +430,4 @@ The core MVP:
 - explainable recommendation state
 - loading state
 - no-match state
-- external-data error state have now been defined.
-
-The next step is to review these low-fidelity wireframes against the documented decisions and refine them during implementation or usability testing if new issues are identified.
+- external-data error state
