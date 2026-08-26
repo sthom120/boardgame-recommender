@@ -353,6 +353,30 @@ No board-game knowledge needed.
 
 A small supporting line may also explain that recommendations consider player count, time, complexity, play style, mood and age suitability.
 
+### Low-Fidelity Wireframe
+
+```text
+┌─────────────────────────────────────────────────────────┐
+│                                                         │
+│                 Board Game Recommender                  │
+│                                                         │
+│        Find a board game that fits your group           │
+│                                                         │
+│   Answer a few quick questions about who's playing,     │
+│   how much time you have, and what kind of game you     │
+│   feel like playing.                                    │
+│                                                         │
+│                  ┌─────────────────┐                    │
+│                  │  Find my game   │                    │
+│                  └─────────────────┘                    │
+│                                                         │
+│              No board-game knowledge needed.            │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+The screen deliberately contains one obvious primary action and avoids rankings, search controls, advanced filters or specialist terminology.
+
 ## Design Principle
 
 The landing page should stay intentionally simple.
