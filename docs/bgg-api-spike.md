@@ -10,48 +10,51 @@ The goals are to:
 - understand BGG authentication and API behaviour
 - identify which data can be taken directly from BGG
 - identify which recommendation concepts require application-owned interpretation
-- establish a safe and maintainable integration approach
+- validate a normalised internal game-data model against varied real records
 - identify technical, licensing and data-quality risks before implementation begins
 
 ---
 
-## Current Status
+## Status
 
-The Board Game Recommender was registered with BoardGameGeek as a **public, non-commercial portfolio application**.
+**Core authenticated validation complete.**
 
-The application was **approved by BoardGameGeek on 26 August 2026**.
+The Board Game Recommender was registered with BoardGameGeek as a **public, non-commercial portfolio application** and approved on **26 August 2026**.
 
-An application token has been generated and authenticated API testing has begun successfully.
+Authenticated `/xmlapi2/search` and `/xmlapi2/thing?stats=1` requests were then tested against a deliberately varied **15-record matrix** covering:
 
-Initial authenticated testing using **Wingspan (BGG ID 266192)** has confirmed that:
+- light and party games
+- family games
+- medium and heavy strategy games
+- cooperative games
+- fixed two-player and solo games
+- large-group games
+- children's games
+- short and very long games
+- older and recent releases
+- an expansion edge case
 
-- authentication using a Bearer token works
-- `/xmlapi2/search` works for exact game-title lookup
-- `/xmlapi2/thing?stats=1` returns the expected detailed game data
-- player counts, play time, age, complexity, mechanics, categories, images, ratings and rankings are available
-- community polls provide additional information about recommended player counts and suggested player age
+The validation found that BGG can directly supply most structured data required by the MVP. The main recommendation concepts that are **not direct BGG fields** are subjective experience/mood, audience fit, content fit, match strength and explanation text. These must remain application-owned, transparent rules.
 
-The next stage of the technical spike is to repeat the same inspection across the full 15-game test matrix to identify edge cases and data inconsistencies.
+The spike also identified several important modelling and integration edge cases, including community poll values outside official player ranges, non-numeric player-count buckets such as `5+`, duplicate exact-title search results, expansion classification, varying community poll sample sizes and a UTF-8/display concern that must be handled during normalisation.
 
 ---
 
-# Initial Findings
+# Registration, Authentication and Terms
 
-## Registration and Authorization
+## Authentication
 
-BoardGameGeek's XML API usage guide states that registration and authorization are required for nearly all XML API use.
+BGG's XML API usage guidance requires registration and authorization for nearly all XML API use.
 
-Applications are registered through the BGG applications page. Once approved, an application token can be created and sent with requests using the `Authorization` header.
-
-Example authentication structure:
+The application token is sent using the `Authorization` header:
 
 ```text
 Authorization: Bearer <application-token>
 ```
 
-The Board Game Recommender application was approved on **26 August 2026**, and authenticated requests have now been successfully completed.
+Authenticated requests returned `200 OK` during the spike.
 
-The application token is treated as a secret and must not be:
+The token must remain server-side and must not be:
 
 - committed to GitHub
 - written directly into source code
@@ -66,26 +69,26 @@ Source:
 
 ## Server-Side Requests and Caching
 
-BGG recommends that applications make requests from their own servers where possible and cache results to reduce request volume.
+BGG recommends server-side requests and caching to reduce request volume.
 
-Making BGG requests directly from the browser would:
+Direct browser access would create several problems:
 
 - expose the application token
-- increase unnecessary external traffic
-- tightly couple the frontend to BGG's XML format
-- make caching and retry behaviour more difficult to control
+- tightly couple the frontend to BGG XML
+- increase unnecessary external requests
+- make retry and throttling behaviour harder to control
 
-This supports an architecture where the frontend communicates with the application's own backend.
-
-The backend will be responsible for:
+The backend should therefore handle:
 
 - BGG authentication
 - API requests
 - XML parsing
-- data normalisation
+- data validation and normalisation
 - caching
 - throttling
 - retry behaviour
+
+This supports the architecture recorded in ADR 001.
 
 Source:
 
@@ -93,36 +96,17 @@ Source:
 
 ---
 
-## API Format
+## Rate Limiting and Temporary Errors
 
-BGG XML API2 returns **XML rather than JSON**.
+BGG documentation notes that requests made too frequently may receive HTTP `500` or `503` responses and indicates that roughly five seconds between repeated requests may sometimes be necessary.
 
-The production application will therefore require an XML parsing layer.
+The production integration should therefore:
 
-Raw BGG XML should not be passed directly through the rest of the application. Instead, BGG responses should be transformed into a predictable internal JSON structure.
-
-Source:
-
-- https://boardgamegeek.com/wiki/page/BGG_XML_API2
-
----
-
-## Rate Limiting and Throttling
-
-BGG states that requests sent too frequently may receive HTTP `500` or `503` responses.
-
-The current XML API2 documentation indicates that approximately five seconds between requests may be necessary when making repeated requests.
-
-The application should therefore:
-
-- minimise unnecessary external requests
-- cache game data
+- cache relatively slow-changing game data
 - batch requests where appropriate
-- avoid repeatedly retrieving unchanged game records
-- implement controlled retry behaviour
-- avoid aggressive automatic polling
-
-This will be tested further during the multi-game API validation.
+- avoid repeatedly retrieving unchanged records
+- avoid aggressive polling
+- implement controlled retry/backoff behaviour for temporary failures
 
 Source:
 
@@ -130,98 +114,13 @@ Source:
 
 ---
 
-# API Endpoints
+## Attribution and AI Constraint
 
-## Search Endpoint
+A public-facing application using BGG XML API data must provide appropriate **Powered by BGG** attribution and link.
 
-The `/xmlapi2/search` endpoint searches the BGG database by name.
+BGG's terms should be reviewed again immediately before public deployment.
 
-It supports:
-
-- searching by game title
-- filtering by item type
-- exact title matching using `exact=1`
-
-Likely production use:
-
-1. search for a game by name
-2. obtain its BGG ID
-3. retrieve the detailed record using `/thing`
-
-Example:
-
-```text
-/xmlapi2/search?query=Wingspan&type=boardgame&exact=1
-```
-
-Authenticated testing of this endpoint has now been successful.
-
-Source:
-
-- https://boardgamegeek.com/wiki/page/BGG_XML_API2
-
----
-
-## Thing Endpoint
-
-The `/xmlapi2/thing` endpoint provides detailed information about BGG items.
-
-Using:
-
-```text
-stats=1
-```
-
-adds rating and ranking statistics.
-
-The API supports retrieving multiple comma-separated IDs, with the current documentation listing a maximum of 20 items per request.
-
-Useful returned data includes:
-
-- minimum and maximum players
-- playing time
-- minimum play time
-- maximum play time
-- publisher minimum age
-- community suggested player-count polls
-- community suggested player-age polls
-- categories
-- mechanics
-- images
-- thumbnails
-- ratings
-- Bayesian ratings
-- number of ratings
-- rankings
-- community complexity / weight
-
-Example:
-
-```text
-/xmlapi2/thing?id=266192&stats=1
-```
-
-Authenticated testing using Wingspan returned `200 OK` and confirmed these structures are available in practice.
-
-Source:
-
-- https://boardgamegeek.com/wiki/page/BGG_XML_API2
-
----
-
-# Attribution and Terms
-
-Public-facing applications using BGG XML API data must provide appropriate BoardGameGeek attribution.
-
-The production application will need to include the required **Powered by BGG** attribution and link.
-
-BGG's terms should be reviewed again before public deployment.
-
-A significant future constraint is that BGG's current terms prohibit using XML API or site data to train an AI or Large Language Model system.
-
-Therefore, any future AI functionality must **not train a model using BGG data**.
-
-Possible future AI-assisted functionality would require a separate compliance review before implementation.
+A significant future constraint is that current BGG terms prohibit using XML API or site data to train AI or Large Language Model systems. Any future AI-assisted feature will therefore require a separate compliance review and must not assume BGG data can be used for model training.
 
 Sources:
 
@@ -230,178 +129,400 @@ Sources:
 
 ---
 
-# MVP Field Investigation
+# API Endpoints Validated
 
-| Requirement | Current finding | Notes |
-| --- | --- | --- |
-| Number of players | **Confirmed** | `minplayers`, `maxplayers` and community player-count polls are available |
-| Available play time | **Confirmed** | `playingtime`, `minplaytime` and `maxplaytime` returned successfully |
-| Desired complexity | **Confirmed** | Community `averageweight` returned through `stats=1` |
-| Experience / mood | **Derived rather than direct** | Requires application-owned mapping from mechanics, categories and other game characteristics |
-| Game style / mechanics | **Confirmed** | `boardgamemechanic` and `boardgamecategory` links returned successfully |
-| Age appropriateness | **Confirmed, interpretation required** | `minage` and community suggested-player-age poll are available |
-| Game image | **Confirmed** | Image and thumbnail fields returned successfully |
-| Ratings / rankings | **Confirmed** | Ratings and multiple ranking records returned using `stats=1` |
+## `/xmlapi2/search`
 
-The structured inputs needed by the MVP are therefore strongly supported by BGG.
+Used to search BGG records and obtain BGG IDs.
 
-The main exception is **experience / mood**, which is not a direct BGG field and will require transparent application-owned interpretation.
-
----
-
-# Interpretation of the Six MVP Inputs
-
-## 1. Number of Players
-
-BGG provides:
-
-- publisher minimum players
-- publisher maximum players
-- community voting for individual player counts
-
-The community data appears particularly valuable.
-
-A game being technically playable at a certain player count does not necessarily mean it is particularly good at that count.
-
-The recommender should eventually distinguish between:
-
-- playable
-- recommended
-- especially strong
-
-for the selected number of players.
-
----
-
-## 2. Available Play Time
-
-BGG provides:
-
-- `minplaytime`
-- `maxplaytime`
-- `playingtime`
-
-The recommender can use the minimum and maximum values to compare games against the user's selected time range.
-
-Further multi-game testing is required to determine how reliable publisher play-time estimates are across different types of games.
-
----
-
-## 3. Desired Complexity
-
-BGG provides the community statistic:
+Example:
 
 ```text
-averageweight
+/xmlapi2/search?query=Wingspan&type=boardgame&exact=1
 ```
 
-This can be used internally as the main structured complexity signal.
+Authenticated exact-title searches succeeded throughout the test matrix.
 
-The application should not expose the term **weight** to casual users without explanation.
+However, `exact=1` does **not** guarantee one unique result.
 
-Instead, numerical weight ranges can later be mapped to plain-language options such as:
+Two important examples were found:
+
+- **Patchwork** returned the 2014 primary title plus a 2009 record where `Patchwork` was an alternate title.
+- **Love Letter** returned two separate primary-title records, from 2012 and 2019.
+
+Production search resolution must therefore not assume that an exact title uniquely identifies one game.
+
+A sensible resolution strategy is to:
+
+1. prefer an exact **primary-name** match over an alternate-name match
+2. if multiple primary-name matches remain, use year/edition or another explicit selection rule
+3. prefer known BGG IDs when importing a controlled recommendation catalogue rather than repeatedly resolving titles at runtime
+
+Source:
+
+- https://boardgamegeek.com/wiki/page/BGG_XML_API2
+
+---
+
+## `/xmlapi2/thing?stats=1`
+
+Used to retrieve detailed game records and community statistics.
+
+Example:
+
+```text
+/xmlapi2/thing?id=266192&stats=1
+```
+
+The authenticated tests confirmed access to fields including:
+
+- primary name and year published
+- minimum and maximum players
+- playing time, minimum play time and maximum play time
+- publisher minimum age
+- community suggested player-count polls
+- community suggested player-age polls
+- categories
+- mechanics
+- image and thumbnail URLs
+- average rating
+- Bayesian average rating
+- users rated
+- rankings
+- average community weight / complexity
+- relationship links such as expansion/base-game links
+
+The API can retrieve multiple comma-separated IDs, with the current API2 documentation listing a maximum of 20 items in one request.
+
+Source:
+
+- https://boardgamegeek.com/wiki/page/BGG_XML_API2
+
+---
+
+# MVP Data Support
+
+| MVP requirement | Finding | Production interpretation |
+| --- | --- | --- |
+| Number of players | **Supported** | Official `minplayers`/`maxplayers` provide hard eligibility; community polls provide suitability within that range |
+| Available play time | **Supported** | `minplaytime` and `maxplaytime` can be matched to the user's time preference |
+| Desired complexity | **Supported** | `averageweight` provides a structured community complexity signal |
+| Experience / mood | **Partly supported; derived** | Mechanics/categories provide signals, but mood requires application-owned mapping |
+| Game style / mechanics | **Supported** | BGG mechanics can be translated into simpler user-facing style options |
+| Age appropriateness | **Supported; interpretation required** | Publisher age and community age poll should both be retained |
+| Game image | **Supported** | Image and thumbnail URLs are available |
+| Ratings / rankings | **Supported** | Useful as supporting quality evidence, not as the main recommendation criterion |
+
+### Conclusion for the six questionnaire inputs
+
+The six MVP inputs can be supported.
+
+Five have direct or strongly structured BGG evidence. **Experience / mood** is the main input that requires an explicit application-owned interpretation layer rather than a single BGG field.
+
+---
+
+# 15-Record Authenticated Validation Matrix
+
+The detailed test plan is stored in `docs/bgg-test-matrix.md`.
+
+The table below summarises the core values and the main reason each record was useful to the spike.
+
+| Game | BGG ID | Year | Players | Time | Min age | Weight | Main validation finding |
+| --- | ---: | ---: | --- | --- | ---: | ---: | --- |
+| Codenames | 178900 | 2015 | 2–8 | 15 min | 10 | 1.2533 | 6 players is much stronger than 2–3 despite all being inside official range |
+| Ticket to Ride | 9209 | 2004 | 2–5 | 30–60 min | 8 | 1.8184 | Accessible family-game data behaves cleanly; community strongly prefers 4 players |
+| Wingspan | 266192 | 2019 | 1–5 | 40–70 min | 10 | 2.4815 | Confirmed core fields, multiple rankings, polls, images and medium complexity |
+| Brass: Birmingham | 224517 | 2018 | 2–4 | 60–120 min | 14 | 3.86 | Heavy-strategy end of complexity scale represented clearly |
+| Pandemic | 30549 | 2008 | 2–4 | 45 min | 8 | 2.3933 | Mechanic includes Solo/Solitaire despite official minimum of 2; mechanics cannot define hard eligibility |
+| Patchwork | 163412 | 2014 | 2 | 15–30 min | 8 | 1.5976 | Fixed two-player record works; exact search also returned an alternate-title match |
+| Under Falling Skies | 306735 | 2020 | 1 | 20–40 min | 12 | 2.3904 | Fixed solo record works; community poll still includes a `1+` bucket |
+| Just One | 254640 | 2018 | 3–7 | 20–60 min | 8 | 1.0327 | Very light game; 6–7 players strongly preferred; cooperative/word mechanics are useful signals |
+| My First Carcassonne | 41010 | 2009 | 2–4 | 10–20 min | 4 | 1.1265 | Children's age data behaves sensibly and community voting can differ slightly from publisher age |
+| Love Letter | 129622 | 2012 | 2–4 | 20 min | 10 | 1.1842 | Community strongly prefers 4; age poll peaks at 8; same exact primary title exists for another edition |
+| Twilight Imperium: Fourth Edition | 233078 | 2017 | 3–6 | 240–480 min | 14 | 4.3625 | Extreme long/heavy record represented correctly; 6 players strongest |
+| 7 Wonders | 68448 | 2010 | 2–7 | 30 min | 10 | 2.3145 | 4–5 strongest; 2 is officially valid but community opinion is poor |
+| Carcassonne | 822 | 2000 | 2–5 | 30–45 min | 7 | 1.8838 | 2–3 strongest; community age peaks at 8 while publisher minimum is 7 |
+| Wyrmspan | 410201 | 2024 | 1–5 | 90 min | 14 | 2.8337 | Recent record works; poll sample is much smaller and community age peaks at 12 |
+| Wingspan: European Expansion | 290448 | 2019 | 1–5 | 40–70 min | 10 | 2.4345 | Expansion looks like a normal `boardgame` record; relationship links are required to exclude it from standalone recommendations |
+
+The matrix provides enough variation to validate the shape of the integration model. It is **not** intended to prove recommendation quality; that requires a larger dataset later.
+
+---
+
+# Cross-Game Findings
+
+## 1. Official Player Range Is Eligibility, Not Suitability
+
+Across multiple games, the community poll showed large differences between player counts that are all technically valid.
+
+Examples:
+
+- Codenames officially supports 2–8, but community opinion strongly favours 6 and is poor at 2–3.
+- 7 Wonders officially supports 2–7, but 4–5 are clearly stronger and 2 performs poorly.
+- Love Letter officially supports 2–4, but 4 is overwhelmingly the strongest configuration.
+- Carcassonne officially supports 2–5, but 2–3 are strongest and 5 is substantially weaker.
+
+The recommendation engine should therefore use:
+
+- official `minplayers` and `maxplayers` as **hard eligibility boundaries**
+- community player-count polls as a **suitability signal within those boundaries**
+
+A poll must never widen the official playable range.
+
+This is important because poll data can include values outside or beyond that range. For example:
+
+- Pandemic has official minimum 2 but includes a community poll row for 1 player.
+- Under Falling Skies is officially 1 player but includes a `1+` poll bucket.
+
+---
+
+## 2. Player-Count Poll Values Must Be Strings
+
+BGG player polls contain values such as:
+
+```text
+1+
+2+
+4+
+5+
+6+
+7+
+8+
+```
+
+The normalised model must therefore store the poll's `players` value as a **string**, not an integer.
+
+These open-ended buckets should be preserved as source data but should not be used to override official `minplayers`/`maxplayers`.
+
+---
+
+## 3. Community Polls Need Proportional Scoring and Confidence
+
+Raw vote totals vary greatly between records because popular older games have far more community responses than newer or less widely rated games.
+
+For example, Wyrmspan's player and age polls contain far fewer votes than long-established games such as Carcassonne, Codenames or Ticket to Ride.
+
+Future suitability scoring should therefore avoid comparing raw vote counts across games.
+
+A better approach is likely to use:
+
+- proportions within each player-count row, such as Best / total and Recommended / total
+- total votes as a confidence or evidence-strength signal
+- a minimum-evidence rule or smoothing strategy for very small samples
+
+The exact scoring formula belongs in the recommendation-design work rather than this integration spike.
+
+---
+
+## 4. Publisher Age and Community Age Are Different Signals
+
+The tests show that publisher minimum age and community suggested age often agree, but not always.
+
+Examples:
+
+- Ticket to Ride: publisher 8 and community peak 8
+- Brass: Birmingham: publisher 14 and community peak 14
+- Wingspan: publisher 10 and community peak 10, with substantial support for 8
+- Love Letter: publisher 10 while community peak is 8
+- Carcassonne: publisher 7 while community peak is 8
+- Wyrmspan: publisher 14 while community peak is 12
+
+Neither value should silently replace the other.
+
+The normalised record should preserve:
+
+- publisher minimum age as a source fact
+- the complete community age poll
+- any derived community-age summary as a clearly application-derived value
+
+Age eligibility also remains different from broader **audience fit**. BGG data alone cannot determine whether a technically age-appropriate game is the best recommendation for a specific mixed group.
+
+---
+
+## 5. `averageweight` Is Useful for Complexity
+
+The test matrix produced a sensible spread from very light to very heavy games:
+
+- Just One: `1.0327`
+- My First Carcassonne: `1.1265`
+- Love Letter: `1.1842`
+- Ticket to Ride: `1.8184`
+- Wingspan: `2.4815`
+- Wyrmspan: `2.8337`
+- Brass: Birmingham: `3.86`
+- Twilight Imperium: Fourth Edition: `4.3625`
+
+This supports using `averageweight` as the primary structured complexity signal.
+
+The frontend should not expose the BGG term **weight** to casual users. Recommendation-design work will map ranges to plain-language questionnaire choices such as:
 
 - Light and easy
 - Some strategy
 - Moderately challenging
 - Deep and challenging
 
-The exact thresholds will be designed and tested separately in the recommendation-engine work.
+The final thresholds still require separate testing.
 
 ---
 
-## 4. Experience / Mood
+## 6. Mechanics Are Strong Signals, But Not Hard Rules
 
-BGG does not provide one direct field describing how a game feels to play.
+BGG mechanics are useful source data for translating technical concepts into the questionnaire's plain-language game styles.
 
-The project's questionnaire currently includes experiences such as:
+Examples found during the matrix include:
 
-- Social & lively
-- Relaxed & easy-going
-- Competitive
-- Strategic & thoughtful
-- Cooperative
-- Immersive & thematic
-- Funny, silly & chaotic
+- `Set Collection`, `Open Drafting`, `Hand Management` → useful evidence for collecting/building and planning/resource-oriented play
+- `Cooperative Game` → strong evidence for cooperative experience
+- `Deduction` → useful evidence for solving/figuring things out
+- `Team-Based Game` and `Word Game` → useful evidence for social/word-oriented games
+- `Network and Route Building`, `Market`, `Loans`, `Income` and `Tech Trees / Tech Tracks` → strong evidence for strategic planning/resource management
 
-These concepts will require a transparent mapping layer using information such as:
+However, mechanics must not define hard eligibility.
 
-- mechanics
-- categories
-- player interaction
-- cooperative mechanics
-- theme
-- application-owned tags where BGG data is insufficient
+Pandemic demonstrates this clearly: BGG lists `Solo / Solitaire Game` as a mechanic while the official player range is 2–4.
 
-This should remain separate from raw BGG data.
+Therefore:
+
+- official player range controls hard player eligibility
+- mechanics/categories contribute to preference scoring and explanation
+- subjective mood remains derived from multiple signals rather than a one-to-one mechanic mapping
 
 ---
 
-## 5. Game Style / Mechanics
+## 7. Categories Often Describe Theme More Than Play Style
 
-BGG provides structured mechanics and categories.
+Categories such as:
 
-These are useful for recommendation logic but frequently use terminology unfamiliar to the target user.
+- Trains
+- Animals
+- Fantasy
+- Medieval
+- Medical
+- Spies / Secret Agents
 
-For example:
+are useful for theme and context, but frequently say less about what players actually do.
 
-```text
-Set Collection
-Hand Management
-Open Drafting
+For Q5 game-style mapping, mechanics are generally the stronger source.
+
+Categories may still help with theme, immersive experience and future filtering.
+
+---
+
+## 8. Expansions Require Explicit Classification
+
+The expansion test produced an important edge case.
+
+**Wingspan: European Expansion (BGG ID 290448)** is returned as a normal top-level `boardgame` item and contains plausible player, time, age, weight and mechanic data.
+
+A recommender that checks only item type and normal game fields could therefore accidentally recommend an expansion as though it were a standalone game.
+
+Expansion/base-game relationships are exposed through `boardgameexpansion` links. In the tested record, inbound expansion links identified more than one compatible/base game relationship.
+
+The internal model should therefore use a structure such as:
+
+```js
+classification: {
+  isExpansion: true,
+  baseGames: [
+    { bggId: 266192, name: "Wingspan" },
+    { bggId: 366161, name: "Wingspan Asia" }
+  ]
+}
 ```
 
-may contribute internally to user-facing categories such as:
+`baseGames` must be an array rather than a single `baseGameId`.
 
-- Collecting & building
-- Planning & managing resources
-
-The application should retain BGG's technical mechanic names internally while presenting simpler language to the user.
+For the MVP, expansion records should be **excluded from normal recommendation candidates** unless expansion support is deliberately added later.
 
 ---
 
-## 6. Age Appropriateness
+## 9. Exact Search Needs Resolution Logic
 
-BGG provides:
+Authenticated search testing showed two different ambiguity types:
 
+### Alternate-title collision
+
+Searching `Patchwork` exactly returned:
+
+- BGG 163412 — 2014, primary title `Patchwork`
+- BGG 41585 — 2009, `Patchwork` as an alternate title
+
+A resolver should prefer the exact primary-name match.
+
+### Multiple primary editions
+
+Searching `Love Letter` exactly returned:
+
+- BGG 129622 — 2012, primary title `Love Letter`
+- BGG 277085 — 2019, primary title `Love Letter`
+
+Primary-name preference alone cannot distinguish these records.
+
+The resolver therefore needs edition/year context or another explicit catalogue-selection rule.
+
+---
+
+## 10. UTF-8 / Display Handling Needs Validation
+
+During the expansion inspection, one linked title containing an en dash displayed in Windows PowerShell as `â€“`.
+
+This should be treated as an **encoding/display concern**, not automatically as proof that BGG supplied corrupted text.
+
+The production Node/XML normalisation layer should explicitly handle UTF-8 and include a parser test containing non-ASCII punctuation or characters.
+
+---
+
+# Source Data vs Application-Derived Data
+
+A core design boundary emerged from the spike.
+
+## BGG source facts
+
+The normalised BGG integration layer may preserve facts/evidence such as:
+
+- game identity
+- year published
+- official player range
+- player-count community poll
+- play-time values
 - publisher minimum age
-- community suggested-player-age voting
+- community age poll
+- average weight
+- categories
+- mechanics
+- images
+- ratings
+- rankings
+- expansion relationships
 
-These can help determine **age eligibility**.
+## Application-derived concepts
 
-However, age eligibility is not the same as **audience fit**.
+The recommendation layer should calculate concepts such as:
 
-For example, a game may be technically suitable for a 10-year-old but still be a better recommendation for:
+- player-count suitability score
+- community-age summary
+- plain-language game-style mappings
+- social / relaxed / competitive / strategic / cooperative / immersive / chaotic mood signals
+- beginner-friendly labels
+- audience fit
+- content fit
+- match score or match band
+- recommendation explanations
+- caveats / "good to know" text
 
-- a mixed family group aged 10–70
+Derived values should not be stored or presented as though they were facts supplied directly by BGG.
 
-than:
-
-- a group consisting entirely of 10-year-olds
-
-Audience fit will therefore require application-owned recommendation rules in addition to BGG age data.
+This separation makes the recommendation behaviour easier to explain and test.
 
 ---
 
-# Proposed Internal Game-Data Model
+# Refined Internal Game-Data Model
 
 The rest of the application should not consume raw BGG XML.
 
-The BGG integration layer should transform each response into an application-owned structure.
+The BGG integration layer should transform each response into predictable application-owned JSON while preserving important source evidence.
 
-The initial model should remain close to source facts.
-
-Derived concepts such as:
-
-- mood
-- beginner-friendly labels
-- match strength
-- audience fit
-- explanation text
-
-should be calculated separately.
-
-An updated illustrative structure is:
+Illustrative model:
 
 ```js
 {
@@ -409,10 +530,14 @@ An updated illustrative structure is:
   name: "Wingspan",
   yearPublished: 2019,
 
+  classification: {
+    isExpansion: false,
+    baseGames: []
+  },
+
   players: {
     min: 1,
     max: 5,
-
     communityPoll: [
       {
         players: "1",
@@ -443,21 +568,10 @@ An updated illustrative structure is:
 
   age: {
     publisherMinimum: 10,
-    communitySuggested: 10,
-
     communityPoll: [
-      {
-        age: "8",
-        votes: 165
-      },
-      {
-        age: "10",
-        votes: 224
-      },
-      {
-        age: "12",
-        votes: 84
-      }
+      { age: "8", votes: 165 },
+      { age: "10", votes: 224 },
+      { age: "12", votes: 84 }
     ]
   },
 
@@ -504,582 +618,54 @@ An updated illustrative structure is:
 }
 ```
 
-The arrays above are illustrative rather than exhaustive.
+The example arrays are shortened for readability. Production normalisation should retain the complete useful poll and ranking records.
 
-For example, the complete player-count and age poll records would be preserved when the data is normalised.
+Important model decisions from the 15-record test are:
+
+- player poll `players` is a **string**
+- preserve the full useful player-count poll rather than only a `communityBest` value
+- preserve the community age poll rather than replacing publisher age
+- rankings are a collection rather than one universal rank
+- expansion classification is explicit
+- `baseGames` is an array
+- source facts remain separate from recommendation-derived values
 
 ---
 
-## Why This Separation Matters
+# Normalisation Rules Identified by the Spike
 
-Keeping raw source facts separate from recommendation logic provides several advantages:
+The integration layer should apply rules such as:
 
-- the frontend receives predictable JSON instead of BGG-specific XML
-- XML parsing remains isolated in the BGG integration layer
-- BGG field-name changes affect fewer parts of the application
-- source facts remain distinguishable from application-derived judgements
-- recommendation rules can be tested independently
-- cached records can use the same internal structure as freshly retrieved records
-- the recommendation engine can evolve without changing the external integration
+1. Parse BGG XML only inside the backend integration layer.
+2. Validate required identifiers and safely handle absent optional values.
+3. Convert numeric source attributes to numbers only when they are genuinely numeric.
+4. Preserve poll player-count labels such as `5+` as strings.
+5. Preserve complete community vote counts needed for later proportional scoring.
+6. Treat official `minplayers`/`maxplayers` as the hard player-range boundary.
+7. Do not infer hard player eligibility from mechanics or community poll rows.
+8. Preserve publisher age and community age evidence separately.
+9. Preserve ranking records as a collection and safely handle missing or non-numeric ranking values such as `N/A`.
+10. Inspect relationship links to classify expansions and compatible/base games.
+11. Normalise text as UTF-8 and test non-ASCII characters.
+12. Attach a `fetchedAt` timestamp so cache age can be evaluated.
 
-This decision is documented separately in:
+---
+
+# Architecture Decision Supported by the Spike
+
+ADR 001 is stored at:
 
 ```text
 docs/adr/001-normalise-bgg-data.md
 ```
 
----
+The decision is:
 
-# Authenticated Validation — Wingspan
+> All BGG requests should be handled by a dedicated backend integration layer that authenticates with BGG, retrieves XML, parses and validates the response, and converts it into an application-owned JSON model.
 
-Authenticated testing began after BoardGameGeek approved the application on **26 August 2026**.
+The 15-record authenticated validation strongly supports this decision.
 
-Wingspan was selected as the first validation game.
-
-BGG ID:
-
-```text
-266192
-```
-
----
-
-## Search Endpoint Test
-
-Request:
-
-```text
-/xmlapi2/search?query=Wingspan&type=boardgame&exact=1
-```
-
-Result:
-
-```text
-HTTP 200 OK
-```
-
-Returned identity data:
-
-| Field | Value |
-| --- | --- |
-| BGG ID | 266192 |
-| Type | boardgame |
-| Primary name | Wingspan |
-| Year published | 2019 |
-
-This confirms that authenticated `/search` requests work as expected for exact board-game title lookup.
-
----
-
-## Thing Endpoint Test
-
-Request:
-
-```text
-/xmlapi2/thing?id=266192&stats=1
-```
-
-Result:
-
-```text
-HTTP 200 OK
-```
-
-Key fields returned:
-
-| Field | Value |
-| --- | ---: |
-| BGG ID | 266192 |
-| Name | Wingspan |
-| Minimum players | 1 |
-| Maximum players | 5 |
-| Minimum play time | 40 minutes |
-| Maximum play time | 70 minutes |
-| Playing time | 70 minutes |
-| Publisher minimum age | 10 |
-| Average rating | 7.99493 |
-| Bayesian average | 7.84153 |
-| Average weight | 2.4815 |
-| Users rated | 114991 |
-
-This confirms that the main structured fields proposed for the internal data model are present in an authenticated response.
-
----
-
-## Categories
-
-BGG returned the following categories:
-
-- Animals
-- Card Game
-- Educational
-- Environmental
-
-Categories appear to describe theme and broad classification rather than necessarily describing the actions performed by players.
-
-They should therefore not automatically be treated as mechanics or play style.
-
----
-
-## Mechanics
-
-BGG returned:
-
-- Action Queue
-- Dice Rolling
-- End Game Bonuses
-- Hand Management
-- Once-Per-Game Abilities
-- Open Drafting
-- Set Collection
-- Solo / Solitaire Game
-- Turn Order: Progressive
-
-This supports the planned approach of treating BGG mechanics as raw technical source data and translating them into simpler user-facing concepts.
-
-For example:
-
-```text
-Set Collection
-Hand Management
-Open Drafting
-```
-
-could contribute to categories such as:
-
-```text
-Collecting & building
-Planning & managing resources
-```
-
-The mapping rules will be documented separately when the recommendation engine is designed.
-
----
-
-## Images
-
-The detailed Wingspan response included:
-
-- an image URL
-- a thumbnail URL
-
-This confirms that BGG can supply the visual assets required for MVP recommendation cards.
-
-The application should store these as external source URLs rather than embedding image data in the normalised record.
-
----
-
-## Rankings
-
-BGG returned multiple ranking records rather than one universal ranking:
-
-| Ranking | Value |
-| --- | ---: |
-| Board Game Rank | 38 |
-| Strategy Game Rank | 49 |
-| Family Game Rank | 6 |
-
-The internal data model should therefore support a collection of rankings rather than a single `rank` property.
-
-Rankings may be useful as supporting quality information.
-
-However, rankings should not automatically determine recommendation order because the purpose of the application is to identify the **best fit for the user's situation**, not simply the highest-ranked BGG games.
-
----
-
-# Community Player-Count Validation
-
-BGG returned community voting for different Wingspan player counts.
-
-| Players | Best | Recommended | Not Recommended |
-| ---: | ---: | ---: | ---: |
-| 1 | 116 | 848 | 395 |
-| 2 | 636 | 1165 | 103 |
-| 3 | 1250 | 606 | 26 |
-| 4 | 556 | 946 | 243 |
-| 5 | 54 | 567 | 878 |
-| 5+ | 3 | 32 | 1048 |
-
-This is significantly more informative than the publisher minimum and maximum values alone.
-
-Wingspan technically supports:
-
-```text
-1–5 players
-```
-
-However, the poll shows major differences in community opinion across that range.
-
-### Three players
-
-Three players received:
-
-- 1250 Best votes
-- 606 Recommended votes
-- only 26 Not Recommended votes
-
-This is the strongest player-count result.
-
-### Two players
-
-Two players also performs very strongly:
-
-- 636 Best
-- 1165 Recommended
-- 103 Not Recommended
-
-### Four players
-
-Four players remains well supported:
-
-- 556 Best
-- 946 Recommended
-- 243 Not Recommended
-
-### Five players
-
-Five players is technically supported but receives much weaker community feedback:
-
-- 54 Best
-- 567 Recommended
-- 878 Not Recommended
-
-This demonstrates why the recommender should not rely on publisher player limits alone.
-
-A future scoring model may distinguish between:
-
-1. **Playable** — the selected player count is inside the publisher range.
-2. **Recommended** — community data indicates the game works well at that count.
-3. **Excellent fit** — the player count is one of the game's strongest configurations.
-
-The BGG integration layer should therefore preserve enough community-poll data to support this interpretation rather than immediately reducing the information to a single `communityBest` value.
-
----
-
-# Community Suggested-Age Validation
-
-Wingspan's publisher minimum age is:
-
-```text
-10
-```
-
-BGG community voting returned:
-
-| Suggested age | Votes |
-| --- | ---: |
-| 2 | 0 |
-| 3 | 0 |
-| 4 | 0 |
-| 5 | 2 |
-| 6 | 13 |
-| 8 | 165 |
-| 10 | 224 |
-| 12 | 84 |
-| 14 | 8 |
-| 16 | 0 |
-| 18 | 0 |
-| 21 and up | 0 |
-
-Age `10` received the largest number of votes.
-
-This agrees with the publisher minimum age.
-
-However, there is also substantial support for age `8`.
-
-This suggests that community age data may provide useful additional context when assessing whether younger players can realistically understand a game.
-
-It should not automatically replace the publisher age.
-
-Instead, the model should retain both.
-
-For Wingspan:
-
-```js
-age: {
-  publisherMinimum: 10,
-  communitySuggested: 10
-}
-```
-
----
-
-## Age Eligibility vs Audience Fit
-
-The BGG age poll appears useful for answering:
-
-> Can players of approximately this age reasonably understand and play the game?
-
-It does not fully answer:
-
-> Is this game particularly enjoyable for this specific group?
-
-For example, the API alone cannot determine whether Wingspan is a better recommendation for:
-
-- a group entirely composed of 10-year-olds
-- a mixed family group aged 10–70
-- experienced adult hobby gamers
-
-The recommender must therefore distinguish between:
-
-### Age eligibility
-
-Whether the youngest player can realistically understand and participate in the game.
-
-### Audience fit
-
-Whether the game is likely to suit the interests and situation of the entire group.
-
-Audience fit will require transparent application-owned recommendation rules.
-
----
-
-# Initial Authenticated Validation Outcome
-
-The Wingspan test confirms that BGG can directly supply a substantial portion of the proposed internal model.
-
-Confirmed fields include:
-
-- game identity
-- year published
-- player range
-- community player-count suitability
-- minimum play time
-- maximum play time
-- general playing time
-- publisher minimum age
-- community suggested age
-- complexity / weight
-- categories
-- mechanics
-- image
-- thumbnail
-- average rating
-- Bayesian average
-- number of ratings
-- overall rankings
-- category-specific rankings
-
-This strongly supports the existing decision to normalise BGG XML into an application-owned JSON structure before data enters the recommendation engine.
-
-However, one successful game is not sufficient to establish that the data model is robust.
-
-Further testing is required across games with different structures and edge cases.
-
----
-
-# Data Still Requiring Application-Owned Interpretation
-
-The API investigation has identified an important boundary between **source data** and **recommendation logic**.
-
-## BGG can provide source facts such as:
-
-- players
-- play time
-- minimum age
-- complexity
-- mechanics
-- categories
-- community polls
-- ratings
-- rankings
-
-## The application will need to derive concepts such as:
-
-- social
-- relaxed
-- competitive
-- strategic
-- cooperative
-- funny / silly / chaotic
-- beginner-friendly
-- audience fit
-- match strength
-- recommendation explanation
-- useful caveats
-
-These derived concepts should remain transparent and testable.
-
-They should not be stored as though they were facts supplied directly by BoardGameGeek.
-
----
-
-# Questions Still to Answer
-
-The remaining technical-spike questions include:
-
-- How consistent are these fields across all 15 test games?
-- How does BGG represent expansions compared with standalone games?
-- How should missing or null values be handled?
-- Are publisher play-time values reliable enough for recommendation scoring?
-- Are age values consistent across children's, family and hobby games?
-- How should community player-count voting be converted into a suitability score?
-- Should community recommended player counts supplement rather than override publisher limits?
-- How should `averageweight` values map to the application's four plain-language complexity levels?
-- How should BGG mechanics map to plain-language play-style options?
-- Which mechanics and categories can reliably indicate mood?
-- Which mood/content classifications require application-owned metadata?
-- What information should be treated as a hard eligibility rule?
-- What information should be treated as a weighted preference?
-- How long should relatively slow-changing BGG records remain cached?
-- What retry strategy should be used after a temporary `500` or `503` response?
-- How should `"N/A"` or other non-numeric ranking values be normalised?
-- How should community polls with very small numbers of votes be treated?
-- How should different language editions or duplicate title results be handled?
-- What BGG data identifies expansions and their parent/base games?
-- Do BGG's terms create restrictions around calculated match scores or derived summaries that require additional clarification?
-- What future AI-assisted functionality, if any, would remain compliant with BGG's restrictions?
-
----
-
-# Multi-Game Test Matrix
-
-The technical spike uses a deliberately varied set of 15 games.
-
-The purpose is not to evaluate recommendation quality yet.
-
-The purpose is to test whether the API integration and internal data model can handle different kinds of BGG records.
-
-| # | Game | Reason for inclusion |
-| ---: | --- | --- |
-| 1 | Codenames | Light/social/party game and larger team play |
-| 2 | Ticket to Ride | Accessible family game |
-| 3 | Wingspan | Medium strategy game and initial authenticated validation |
-| 4 | Brass: Birmingham | Heavy/high-complexity strategy game |
-| 5 | Pandemic | Cooperative game |
-| 6 | Patchwork | Dedicated two-player game |
-| 7 | Under Falling Skies | Solo-focused game |
-| 8 | Just One | Large-group/light game |
-| 9 | My First Carcassonne | Children's game |
-| 10 | Love Letter | Very short/light game |
-| 11 | Twilight Imperium: Fourth Edition | Very long/heavy game |
-| 12 | 7 Wonders | Wider player-count game with simultaneous play |
-| 13 | Carcassonne | Older modern classic |
-| 14 | Wyrmspan | Recent game |
-| 15 | Wingspan: European Expansion | Expansion edge case |
-
-The detailed checklist is documented separately in:
-
-```text
-docs/bgg-test-matrix.md
-```
-
----
-
-# Multi-Game Inspection Checklist
-
-For each game, inspect:
-
-## Identity and Classification
-
-- BGG ID
-- primary name
-- year published
-- item type
-- standalone game vs expansion
-- parent/base game relationship where available
-
-## Player Information
-
-- minimum players
-- maximum players
-- suggested player-count poll
-- unusual player-count values
-- number of community votes
-
-## Time
-
-- playing time
-- minimum play time
-- maximum play time
-- missing or unusual values
-
-## Age
-
-- publisher minimum age
-- community suggested-age poll
-- vote distribution
-- missing or contradictory values
-
-## Complexity
-
-- average weight
-- number of complexity votes where available
-- missing or unusual values
-
-## Classification
-
-- categories
-- mechanics
-- other useful structured links
-
-## Ratings and Rankings
-
-- average rating
-- Bayesian average
-- users rated
-- overall rank
-- family/category ranks
-- `"N/A"` or missing rank values
-
-## Media
-
-- image
-- thumbnail
-
-## Data Quality
-
-- missing values
-- null values
-- unexpected XML nesting
-- escaped characters
-- duplicate or alternate names
-- conversion problems
-- fields not currently represented by the internal model
-
----
-
-# Testing Scale
-
-The project separates API-model testing from recommendation-quality testing.
-
-## API connectivity
-
-Approximately:
-
-```text
-5 games
-```
-
-is enough to demonstrate that basic endpoint access works.
-
-## Data-model validation
-
-Approximately:
-
-```text
-12–15 deliberately varied games
-```
-
-is appropriate for identifying most obvious integration and modelling issues.
-
-## Recommendation-engine evaluation
-
-A larger controlled dataset of approximately:
-
-```text
-30–50+ games
-```
-
-will later be used to determine whether the recommendation logic behaves sensibly across different preference combinations.
-
-This avoids treating a technically successful API integration as evidence that the recommendation algorithm itself is effective.
-
----
-
-# Proposed Architecture
-
-The current integration direction is:
+Proposed direction:
 
 ```text
 User
@@ -1096,62 +682,87 @@ Our Node / Express API
 Recommendation service       BGG integration service
                                   |
                                   +--> Authentication
-                                  |
                                   +--> XML parsing
-                                  |
-                                  +--> Normalisation
-                                  |
+                                  +--> Validation / normalisation
                                   +--> Cache
-                                  |
                                   +--> Retry / throttling
                                   |
                                   v
                            BGG XML API2
 ```
 
-The frontend and recommendation engine should not depend directly on BGG's XML format.
-
-This architecture remains subject to refinement as the technical spike continues, but authenticated testing so far supports the approach.
+The frontend and recommendation service should depend on the internal JSON contract rather than BGG's XML structure.
 
 ---
 
-# Architecture Decision
+# Remaining Risks and Follow-Up Work
 
-The current architecture decision is documented in:
+The spike has answered the architecture-level questions required to proceed, but it deliberately does not solve every recommendation or production concern.
+
+The following belong in later work:
+
+- define exact `averageweight` thresholds for the four user-facing complexity choices
+- define player-poll suitability formula and confidence handling
+- define mappings from BGG mechanics/categories to plain-language Q4/Q5 choices
+- decide which mood/content classifications require application-owned metadata
+- define cache duration and retry/backoff policy
+- implement and test UTF-8 XML parsing in Node
+- test safe handling of missing/null/`N/A` optional values during parser implementation
+- determine whether a controlled BGG-ID catalogue is preferable to runtime title resolution for the MVP
+- evaluate recommendation quality using a larger controlled set of approximately 30–50+ games
+- review BGG attribution and terms again before public deployment
+- perform a separate compliance review before any future AI-assisted functionality
+
+These are not blockers to beginning requirements, architecture and recommendation-design work because the source-data boundary and integration strategy are now clear.
+
+---
+
+# Testing Scale Going Forward
+
+The project deliberately separates integration testing from recommendation-quality evaluation.
+
+## API connectivity
+
+A small set of records is sufficient to demonstrate endpoint access.
+
+## Data-model validation
+
+The completed **15 deliberately varied records** provide the current technical-spike evidence for the integration model.
+
+## Recommendation-engine evaluation
+
+A larger controlled dataset of approximately:
 
 ```text
-docs/adr/001-normalise-bgg-data.md
+30–50+ games
 ```
 
-The decision is:
+will be used later to determine whether recommendation behaviour is sensible across different questionnaire combinations.
 
-> All BGG requests should be handled by a dedicated backend integration layer that authenticates with BGG, retrieves XML, parses and validates the response, and converts it into an application-owned JSON model.
-
-The authenticated Wingspan test provides the first live evidence supporting this decision.
+A successful API integration should not be mistaken for proof that the recommendation algorithm is effective.
 
 ---
 
-# Next Steps
+# Technical Spike Conclusion
 
-1. Repeat authenticated `/search` and `/thing?stats=1` testing across the remaining games in the 15-game matrix.
-2. Record missing, unusual or inconsistent data.
-3. Test the expansion record deliberately.
-4. Refine the internal game-data model where required.
-5. Define how community player-count polls should be normalised.
-6. Decide how community age information should be represented.
-7. Identify which mood and content classifications require application-owned metadata.
-8. Confirm XML parsing requirements using multiple response structures.
-9. Finalise the technical-spike findings.
-10. Close Issue #3 once the remaining acceptance criteria are satisfied.
+The authenticated BGG XML API2 validation supports proceeding with the Board Game Recommender MVP.
 
----
+The spike confirms that BGG can provide the key structured source data required for:
 
-# Status
+- player eligibility and player-count suitability evidence
+- play-time matching
+- complexity matching
+- age evidence
+- mechanics and categories
+- images
+- ratings and rankings
 
-**In progress.**
+The API does **not** directly provide the complete subjective recommendation experience. Mood, audience fit, content fit, match strength and explanations must be derived by the application using transparent rules.
 
-BoardGameGeek application approval has been received and authenticated XML API2 access has been successfully validated.
+The most important implementation consequence is that BGG should be treated as a **source-data provider**, not as the recommendation engine itself.
 
-The first detailed test using Wingspan confirms strong support for most structured MVP recommendation inputs.
+A backend BGG integration layer will authenticate, retrieve XML, normalise it into an application-owned model and preserve the evidence required by the recommendation service. The recommendation service can then apply explicit, testable rules without coupling the rest of the application to BGG's raw XML format.
 
-The remaining work is to validate these findings across the full 15-game test matrix, identify edge cases and refine the internal model before the technical spike is considered complete.
+The 15-record validation uncovered enough edge cases to refine the model before implementation, particularly around player-count polls, age evidence, expansion detection, search ambiguity and poll confidence.
+
+**Technical-spike outcome: suitable to proceed, with identified follow-up risks documented for implementation and recommendation-design phases.**
