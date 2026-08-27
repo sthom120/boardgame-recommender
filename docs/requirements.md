@@ -465,4 +465,4 @@ These requirements define the current MVP baseline.
 
 Changes to MVP scope should be recorded deliberately rather than introduced during implementation without updating this document.
 
-Recommendation scoring details, complexigit diff -- docs/requirements.mdty thresholds and mechanic-to-style mappings will be defined separately in Issue #9.
+Recommendation scoring details, complexity thresholds and mechanic-to-style mappings will be defined separately in Issue #9.
