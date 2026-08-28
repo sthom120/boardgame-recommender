@@ -278,8 +278,22 @@ Fields:
 
 | Field | Type | Required |
 | --- | --- | --- |
-| `min` | integer | yes |
-| `max` | integer | yes |
+| `min` | integer or null | yes |
+| `max` | integer or null | yes |
+
+The `playerRange` object and both properties remain present in the normalised record.
+
+If the source value cannot be validated, the relevant property is `null`.
+
+For example:
+
+```json
+{
+  "playerRange": {
+    "min": null,
+    "max": 5
+  }
+}
 
 These values control the hard player-count eligibility rule.
 
@@ -1246,6 +1260,22 @@ Unknown
 ```
 
 The label describes the game's interpreted complexity rather than simply repeating the user's selected preference.
+
+#### Display mapping
+
+The frontend-facing complexity label is derived from `complexity.average` using a separate non-overlapping display mapping.
+
+| `complexity.average` | Display label |
+| --- | --- |
+| `1.00 <= value < 1.75` | Light and easy |
+| `1.75 <= value < 2.25` | Some strategy |
+| `2.25 <= value < 3.50` | Moderately challenging |
+| `3.50 <= value <= 5.00` | Deep and challenging |
+| `null`, invalid, or outside the supported range | Unknown |
+
+This display mapping is deliberately separate from the recommendation engine's complexity preference scoring bands.
+
+The recommendation scoring bands may overlap because a game can reasonably be a partial or strong fit for neighbouring user preferences. The display mapping must not overlap because each game needs exactly one complexity label in the frontend response.
 
 ---
 
