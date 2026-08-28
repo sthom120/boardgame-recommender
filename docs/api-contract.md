@@ -294,6 +294,7 @@ For example:
     "max": 5
   }
 }
+```
 
 These values control the hard player-count eligibility rule.
 
