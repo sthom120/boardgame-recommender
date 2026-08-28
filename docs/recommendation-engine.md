@@ -25,7 +25,7 @@ The first scoring model is a starting hypothesis. It should be evaluated against
 
 **Question:** How many people will be playing?
 
-The user selects or enters the exact number of players.
+The user selects or enters the exact number of players. The value must be a whole number of at least `1`.
 
 Examples:
 
@@ -44,7 +44,7 @@ The interface may use a number selector or similar control rather than displayin
 
 Player count is primarily a **hard eligibility requirement**.
 
-A game should not be recommended when the selected player count falls outside the game's official minimum and maximum player range.
+A game is excluded when the selected player count falls outside the game's official minimum and maximum player range.
 
 Community player-count data may then be used to distinguish between games that technically support the selected number but are better or worse at that player count.
 
@@ -67,7 +67,7 @@ Play time is a weighted preference with a Version 1 exclusion boundary.
 
 Games at or below the selected time budget receive the strongest time score.
 
-Games no more than 10% above the selected budget may remain candidates with a caveat.
+Games no more than 10% above the selected budget remain candidates with a caveat.
 
 Games more than 10% above the selected budget are excluded.
 
@@ -187,6 +187,25 @@ Some answers determine whether a game is suitable enough to be considered at all
 
 Hard constraints are requirements that cannot be overridden by a strong match elsewhere in Version 1.
 
+#### Candidate Type
+
+Version 1 recommends standalone base games, not expansions.
+
+The BGG technical spike showed that an expansion may still be returned as a top-level `boardgame` record, so record type alone is not enough to determine eligibility.
+
+The normalised model preserves base-game relationship links in `baseGames`.
+
+The Version 1 rule is:
+
+```text
+if baseGames.length > 0:
+    exclude game from standalone recommendations
+```
+
+A record with one or more base-game relationships is treated as an expansion and is removed before questionnaire scoring begins.
+
+This rule prevents an expansion from being recommended as though it were a playable standalone game.
+
 #### Player Count
 
 The selected number of players must fall within the game's official minimum and maximum player range.
@@ -209,7 +228,7 @@ The rule is:
 
 ```text
 if youngestPlayerAge < publisherMinimumAge:
-    exclude game
+    exclude game
 ```
 
 For example:
@@ -258,7 +277,7 @@ absolute difference between publisher minimum age
 and community suggested age >= 2 years
 ```
 
-the recommendation may display an age caveat.
+the recommendation displays an age caveat.
 
 For example:
 
@@ -360,7 +379,7 @@ For example:
 
 - user has about 60 minutes
 - game maximum play time is 65 minutes
-- the game may remain a candidate with a time caveat
+- the game remains a candidate with a time caveat
 
 A larger mismatch excludes the game.
 
@@ -434,6 +453,24 @@ The engine should not treat **No preference** as a neutral category that games m
 
 This prevents users from being disadvantaged for deliberately leaving a preference open.
 
+### Missing Source Data Behaviour
+
+Version 1 uses explicit rules for missing BGG fields so that individual developers do not need to invent fallback behaviour.
+
+| Missing data | Version 1 behaviour |
+| --- | --- |
+| Official `minplayers` or `maxplayers` | Exclude the game because player eligibility cannot be verified |
+| Publisher minimum age | Exclude the game when youngest-player age is supplied |
+| `maxplaytime` with a defined time budget | Exclude the game because time eligibility cannot be verified |
+| `averageweight` with an active complexity preference | Assign complexity component `0.00` and do not use complexity as an explanation reason |
+| Mechanics/categories needed for an active mood or style | Treat missing lists as empty; the relevant mood/style component is `0.00` unless another documented structured signal produces a match |
+| Community player-count poll | Use the documented neutral player-count score of `0.50` |
+| BGG rating tie-break fields | Skip the missing field and continue to the next tie-break rule |
+
+When a factor is **No preference**, missing data for that factor does not create a penalty or exclusion unless a separate hard eligibility rule applies.
+
+These rules are intentionally conservative: missing evidence must not be silently converted into a strong recommendation signal.
+
 ---
 
 ## Initial Scoring Model
@@ -452,19 +489,19 @@ User-facing results will use simple labels such as:
 
 For each candidate game:
 
-1\. Apply hard eligibility checks.
+1. Apply hard eligibility checks.
 
-2\. Exclude games that clearly fail those checks.
+2. Exclude games that clearly fail those checks.
 
-3\. Calculate scores for the remaining preference factors.
+3. Calculate scores for the remaining preference factors.
 
-4\. Apply the relevant weight to each factor.
+4. Apply the relevant weight to each factor.
 
-5\. Combine the weighted scores.
+5. Combine the weighted scores.
 
-6\. Rank games from strongest to weakest match.
+6. Rank games from strongest to weakest match.
 
-7\. Generate an explanation and any relevant caveat.
+7. Generate an explanation and any relevant caveat.
 
 ---
 
@@ -540,7 +577,7 @@ User selects: 4 players
 Poll row used: "4"
 ```
 
-If an exact row is unavailable, the engine may use an open-ended BGG poll row such as `7+` where:
+If an exact row is unavailable, the engine uses an open-ended BGG poll row such as `7+` where:
 
 - the selected player count is equal to or above the number in that bucket
 - the selected player count is still inside the game's official player range
@@ -598,9 +635,9 @@ Best + Recommended + Not Recommended
 For example:
 
 ```text
-Best:             100
-Recommended:       80
-Not Recommended:   20
+Best:             100
+Recommended:       80
+Not Recommended:   20
 Raw score =
 (100 × 1.00) + (80 × 0.75)
 ----------------------------
@@ -655,7 +692,7 @@ For example:
 
 ```text
 Raw suitability score: 0.90
-Total votes:            10
+Total votes:            10
 Confidence:
 10 / 50 = 0.20
 Adjusted score:
@@ -702,23 +739,23 @@ This prevents missing community data from being treated as evidence that a game 
 
 For each candidate game:
 
-1\. Check whether the selected player count is inside official `minplayers` and `maxplayers`.
+1. Check whether the selected player count is inside official `minplayers` and `maxplayers`.
 
-2\. If not, exclude the game.
+2. If not, exclude the game.
 
-3\. Find the exact matching community player-count poll row.
+3. Find the exact matching community player-count poll row.
 
-4\. If no exact row exists, use the most specific applicable open-ended row where available.
+4. If no exact row exists, use the most specific applicable open-ended row where available.
 
-5\. If no usable poll data exists, assign a neutral score of `0.50`.
+5. If no usable poll data exists, assign a neutral score of `0.50`.
 
-6\. Calculate the raw suitability score from Best, Recommended and Not Recommended votes.
+6. Calculate the raw suitability score from Best, Recommended and Not Recommended votes.
 
-7\. Calculate confidence using `minimum(total votes / 50, 1.00)`.
+7. Calculate confidence using `minimum(total votes / 50, 1.00)`.
 
-8\. Pull low-confidence results toward the neutral value of `0.50`.
+8. Pull low-confidence results toward the neutral value of `0.50`.
 
-9\. Use the confidence-adjusted result as the player-count suitability component score.
+9. Use the confidence-adjusted result as the player-count suitability component score.
 
 The 50-vote confidence threshold and vote weights are Version 1 hypotheses.
 
@@ -1317,11 +1354,19 @@ For example:
 
 ```text
 Player suitability: 1.00 × 25
-Time:               0.75 × 20
-Complexity:         1.00 × 20
-Mood:               0.50 × 20
-Style:              1.00 × 15
+Time:               0.50 × 20
+Complexity:         1.00 × 20
+Mood:               0.50 × 20
+Style:              1.00 × 15
 ```
+
+With all five factors active:
+
+```text
+(25 + 10 + 20 + 10 + 15) / 100 = 0.80
+```
+
+The resulting internal score is `0.80`, which falls within the Version 1 **Strong match** range.
 
 The engine uses this score to rank eligible games.
 
@@ -1387,6 +1432,8 @@ Ties are resolved in this order:
 7. higher BGG `usersRated`
 8. game name in ascending alphabetical order
 9. lower BGG ID as the final stable fallback
+
+If a preference factor is inactive because the user selected **No preference**, that component is skipped during tie-breaking.
 
 If a tie-break field is missing, that field is treated as unavailable and the engine moves to the next tie-break rule.
 
@@ -1466,11 +1513,12 @@ Show a complexity caveat when:
 - the complexity component score is `0.50`
 - the overall game score still reaches the display threshold
 
-Example:
+The wording depends on which side of the selected strong-match range the game's `averageweight` falls:
 
-> This is slightly more complex than the level you selected.
+- above the strong-match range → `This is slightly more complex than the level you selected.`
+- below the strong-match range → `This is slightly lighter than the level you selected.`
 
-No complexity caveat is shown when complexity is **No preference**.
+No complexity caveat is shown when complexity is **No preference**, when the complexity component is `1.00`, or when `averageweight` is missing.
 
 ### Age Caveat
 
@@ -1517,8 +1565,9 @@ Version 1 will:
 1. consider the active weighted factors only
 2. rank those factors by their weighted contribution to the final score
 3. use the strongest **two** factors with component scores of at least `0.50`
-4. use one factor if only one meets that threshold
-5. append a relevant caveat separately when a caveat rule is triggered
+4. if weighted contributions are equal, prefer factors in this order: player count, play time, complexity, mood, style
+5. use one factor if only one meets the `0.50` threshold
+6. append a relevant caveat separately when a caveat rule is triggered
 
 For example:
 
@@ -1640,7 +1689,7 @@ Suitable games should:
 
 A strong cooperative game with a maximum play time of up to 33 minutes may still be considered as a partial time match with a caveat.
 
-A 90-minute cooperative game should normally be excluded because the time mismatch is too large.
+A 90-minute cooperative game is excluded because the time mismatch is more than 10% above the 30-minute budget.
 
 ---
 
@@ -1884,25 +1933,27 @@ The purpose of this testing is to refine the Version 1 hypotheses, not to invent
 The MVP recommendation strategy is currently:
 
 1. Collect the six questionnaire inputs.
-2. Apply the hard official player-count eligibility check.
-3. Apply publisher minimum-age eligibility.
-4. Apply the family-friendly content filter when that restriction is selected.
-5. Apply the 10% play-time exclusion boundary when a time budget is active.
-6. Score eligible games using:
+2. Remove expansion records from the standalone candidate set.
+3. Apply the hard official player-count eligibility check.
+4. Apply publisher minimum-age eligibility.
+5. Apply the family-friendly content filter when that restriction is selected.
+6. Apply the 10% play-time exclusion boundary when a time budget is active.
+7. Apply the documented missing-source-data rules where required.
+8. Score eligible games using:
    - player-count suitability
    - play-time fit
    - complexity fit
    - experience / mood fit
    - game-style fit
-7. Remove any weighted factor where the user selected **No preference**.
-8. Normalise the remaining active weights.
-9. Calculate and rank games by final internal score.
-10. Resolve ties using the documented tie-break sequence.
-11. Keep only games scoring at least `0.55`.
-12. Return up to five qualifying recommendations.
-13. Generate plain-language explanations from the strongest scoring factors.
-14. Show caveats only when one of the explicit Version 1 caveat rules is triggered.
-15. Show limited-match or no-match messaging when too few games qualify.
+9. Remove any weighted factor where the user selected **No preference**.
+10. Normalise the remaining active weights.
+11. Calculate and rank games by final internal score.
+12. Resolve ties using the documented tie-break sequence.
+13. Keep only games scoring at least `0.55`.
+14. Return up to five qualifying recommendations.
+15. Generate plain-language explanations from the strongest scoring factors.
+16. Show caveats only when one of the explicit Version 1 caveat rules is triggered.
+17. Show limited-match or no-match messaging when too few games qualify.
 
 The recommendation engine is deliberately transparent, rule-based and testable.
 
