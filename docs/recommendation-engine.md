@@ -87,7 +87,7 @@ Suggested choices:
 - **Deep and challenging** — complex rules and substantial strategic depth
 - **No preference**
 
-The application will translate these choices into ranges based on BoardGameGeek community `averageweight` data.
+The application will translate these choices into ranges based on the normalised `complexity.average` value, which is sourced from BoardGameGeek community complexity data.
 
 The raw BGG term **weight** should not be shown to users without explanation.
 
@@ -193,12 +193,12 @@ Version 1 recommends standalone base games, not expansions.
 
 The BGG technical spike showed that an expansion may still be returned as a top-level `boardgame` record, so record type alone is not enough to determine eligibility.
 
-The normalised model preserves base-game relationship links in `baseGames`.
+The normalised model preserves base-game relationship links in `relationships.baseGameIds`.
 
 The Version 1 rule is:
 
 ```text
-if baseGames.length > 0:
+if relationships.baseGameIds.length > 0:
     exclude game from standalone recommendations
 ```
 
@@ -227,7 +227,7 @@ Version 1 will use the publisher minimum age as the hard eligibility value.
 The rule is:
 
 ```text
-if youngestPlayerAge < publisherMinimumAge:
+if youngestPlayerAge < age.publisherMinimum:
     exclude game
 ```
 
@@ -373,7 +373,7 @@ Play time is a weighted preference with a clear exclusion boundary.
 
 The user's answer represents the maximum amount of time available.
 
-Version 1 allows a game to remain a candidate when its `maxplaytime` is no more than **10% above** the selected time budget.
+Version 1 allows a game to remain a candidate when its `playTime.maxMinutes` is no more than **10% above** the selected time budget.
 
 For example:
 
@@ -455,17 +455,17 @@ This prevents users from being disadvantaged for deliberately leaving a preferen
 
 ### Missing Source Data Behaviour
 
-Version 1 uses explicit rules for missing BGG fields so that individual developers do not need to invent fallback behaviour.
+Version 1 uses explicit rules for missing normalised source fields so that individual developers do not need to invent fallback behaviour.
 
 | Missing data | Version 1 behaviour |
 | --- | --- |
-| Official `minplayers` or `maxplayers` | Exclude the game because player eligibility cannot be verified |
+| Official `playerRange.min` or `playerRange.max` | Exclude the game because player eligibility cannot be verified |
 | Publisher minimum age | Exclude the game when youngest-player age is supplied |
-| `maxplaytime` with a defined time budget | Exclude the game because time eligibility cannot be verified |
-| `averageweight` with an active complexity preference | Assign complexity component `0.00` and do not use complexity as an explanation reason |
+| `playTime.maxMinutes` with a defined time budget | Exclude the game because time eligibility cannot be verified |
+| `complexity.average` with an active complexity preference | Assign complexity component `0.00` and do not use complexity as an explanation reason |
 | Mechanics/categories needed for an active mood or style | Treat missing lists as empty; the relevant mood/style component is `0.00` unless another documented structured signal produces a match |
 | Community player-count poll | Use the documented neutral player-count score of `0.50` |
-| BGG rating tie-break fields | Skip the missing field and continue to the next tie-break rule |
+| Normalised rating tie-break fields | Skip the missing field and continue to the next tie-break rule |
 
 When a factor is **No preference**, missing data for that factor does not create a penalty or exclusion unless a separate hard eligibility rule applies.
 
@@ -562,13 +562,13 @@ The exact rules for producing these component scores are defined below.
 
 A game must first pass the official player-range eligibility check.
 
-If the user's exact player count is outside the game's official `minplayers` and `maxplayers` range, the game is excluded before community polling is considered.
+If the user's exact player count is outside the game's official `playerRange.min` and `playerRange.max` range, the game is excluded before community polling is considered.
 
 Community polling is then used only to judge **how well the game works at that valid player count**.
 
 ### Selecting the Relevant Poll Row
 
-The engine will look for the BGG `suggested_numplayers` poll row matching the user's exact player count.
+The engine will look for the normalised `playerCountPoll` entry whose `players` label matches the user's exact player count.
 
 For example:
 
@@ -577,7 +577,7 @@ User selects: 4 players
 Poll row used: "4"
 ```
 
-If an exact row is unavailable, the engine uses an open-ended BGG poll row such as `7+` where:
+If an exact entry is unavailable, the engine uses an open-ended `playerCountPoll` label such as `7+` where:
 
 - the selected player count is equal to or above the number in that bucket
 - the selected player count is still inside the game's official player range
@@ -739,7 +739,7 @@ This prevents missing community data from being treated as evidence that a game 
 
 For each candidate game:
 
-1. Check whether the selected player count is inside official `minplayers` and `maxplayers`.
+1. Check whether the selected player count is inside official `playerRange.min` and `playerRange.max`.
 
 2. If not, exclude the game.
 
@@ -780,7 +780,7 @@ The questionnaire choices map to the following internal time budgets:
 | More than 2 hours | No upper limit for MVP scoring |
 | No preference | Factor removed from scoring |
 
-The game's `maxplaytime` value will be compared with the selected time budget.
+The game's `playTime.maxMinutes` value will be compared with the selected time budget.
 
 ### Initial Time-Scoring Rule
 
@@ -821,7 +821,7 @@ The remaining active weights are then normalised normally.
 
 ## Complexity Score
 
-BoardGameGeek `averageweight` uses an approximate 1–5 scale.
+The normalised `complexity.average` value is sourced from BoardGameGeek's `averageweight` field, which uses an approximate 1–5 scale.
 
 The MVP will translate this into beginner-friendly categories.
 
@@ -829,10 +829,10 @@ The MVP will translate this into beginner-friendly categories.
 
 | User choice | Strong match | Partial match |
 | --- | --- | --- |
-| Light and easy | `1.00 <= weight <= 1.75` | `1.75 < weight <= 2.25` |
-| Some strategy | `1.50 <= weight <= 2.50` | `1.00 <= weight < 1.50` or `2.50 < weight <= 3.00` |
-| Moderately challenging | `2.50 <= weight <= 3.50` | `2.00 <= weight < 2.50` or `3.50 < weight <= 4.00` |
-| Deep and challenging | `3.50 <= weight <= 5.00` | `3.00 <= weight < 3.50` |
+| Light and easy | `1.00 <= complexity.average <= 1.75` | `1.75 < complexity.average <= 2.25` |
+| Some strategy | `1.50 <= complexity.average <= 2.50` | `1.00 <= complexity.average < 1.50` or `2.50 < complexity.average <= 3.00` |
+| Moderately challenging | `2.50 <= complexity.average <= 3.50` | `2.00 <= complexity.average < 2.50` or `3.50 < complexity.average <= 4.00` |
+| Deep and challenging | `3.50 <= complexity.average <= 5.00` | `3.00 <= complexity.average < 3.50` |
 
 Initial scoring:
 
@@ -840,7 +840,7 @@ Initial scoring:
 - inside the partial-match range → `0.50`
 - outside both ranges → `0.00`
 
-The inequalities are explicit so that BGG values with several decimal places cannot fall into gaps between bands.
+The inequalities are explicit so that normalised complexity values with several decimal places cannot fall into gaps between bands.
 
 The ranges deliberately overlap between neighbouring user choices because complexity perception is not exact.
 
@@ -879,8 +879,8 @@ The mappings below define the Version 1 rules.
 
 A game receives a strong **Relaxed** signal when all of the following are true:
 
-- `averageweight <= 2.00`
-- `maxplaytime <= 60`
+- `complexity.average <= 2.00`
+- `playTime.maxMinutes <= 60`
 - the game does not contain a mapped high-conflict mechanic
 
 Version 1 high-conflict mechanics are:
@@ -894,7 +894,7 @@ Version 1 high-conflict mechanics are:
 
 A game receives a secondary Relaxed signal when:
 
-- `averageweight <= 2.50`
+- `complexity.average <= 2.50`
 - and none of the high-conflict mechanics above are present
 
 This is an application-derived rule rather than a BGG-supplied mood classification.
@@ -961,7 +961,7 @@ Secondary signals:
 
 Official player eligibility remains independent of these mechanics.
 
-A cooperative or solo-related mechanic must never override official `minplayers` and `maxplayers`.
+A cooperative or solo-related mechanic must never override official `playerRange.min` and `playerRange.max`.
 
 ---
 
@@ -991,7 +991,7 @@ Secondary signals:
 A game may also receive a secondary Strategic signal when:
 
 ```text
-averageweight >= 2.50
+complexity.average >= 2.50
 ```
 
 even if no mapped strategic mechanic is present.
@@ -1217,9 +1217,9 @@ This style is calculated mainly from structured complexity and play-time data ra
 A game receives a strong match when:
 
 ```text
-averageweight <= 1.75
+complexity.average <= 1.75
 AND
-maxplaytime <= 30
+playTime.maxMinutes <= 30
 ```
 
 Component score:
@@ -1231,9 +1231,9 @@ Component score:
 A game receives a partial match when:
 
 ```text
-averageweight <= 2.25
+complexity.average <= 2.25
 AND
-maxplaytime <= 45
+playTime.maxMinutes <= 45
 ```
 
 Component score:
@@ -1319,20 +1319,20 @@ Version 1 uses explicit fallback behaviour when required BGG source fields are m
 
 | Missing or invalid field | Version 1 behaviour |
 | --- | --- |
-| Official `minplayers` or `maxplayers` | Exclude the game because player eligibility cannot be verified |
+| Official `playerRange.min` or `playerRange.max` | Exclude the game because player eligibility cannot be verified |
 | Relevant community player-count poll | Keep the game and use the neutral player suitability score of `0.50` |
-| `maxplaytime` when a finite time budget is active | Exclude the game because time fit cannot be verified |
-| `maxplaytime` when **More than 2 hours** is selected | Keep the game and use the time component `1.00` |
-| `maxplaytime` when **No preference** is selected | Ignore play time |
-| `averageweight` when complexity is active | Use complexity component `0.00` because there is no evidence of a complexity match |
-| `averageweight` when complexity is **No preference** | Ignore complexity |
+| `playTime.maxMinutes` when a finite time budget is active | Exclude the game because time fit cannot be verified |
+| `playTime.maxMinutes` when **More than 2 hours** is selected | Keep the game and use the time component `1.00` |
+| `playTime.maxMinutes` when **No preference** is selected | Ignore play time |
+| `complexity.average` when complexity is active | Use complexity component `0.00` because there is no evidence of a complexity match |
+| `complexity.average` when complexity is **No preference** | Ignore complexity |
 | Publisher minimum age | Exclude the game when a youngest-player age is supplied |
 | Community age poll | Keep the game; no community-age caveat is generated |
 | Content classification | Treat as `unknown` |
 | Mechanics/categories used for selected mood or style | Unmapped or absent signals contribute no mood/style evidence |
-| `bayesAverage` or `usersRated` | Skip that tie-break field and continue to the next rule |
+| `ratings.bayesianAverage` or `ratings.usersRated` | Skip that tie-break field and continue to the next rule |
 
-For numeric BGG fields, non-numeric values, `N/A`, null values and invalid zero values are treated as missing where the field is expected to be positive.
+For normalised numeric fields, non-numeric values, `N/A`, null values and invalid zero values are treated as missing where the field is expected to be positive.
 
 These rules are deliberately conservative for hard eligibility checks and transparent for weighted preferences.
 
@@ -1428,10 +1428,10 @@ Ties are resolved in this order:
 3. higher complexity component
 4. higher mood component
 5. higher style component
-6. higher BGG `bayesAverage`
-7. higher BGG `usersRated`
+6. higher `ratings.bayesianAverage`
+7. higher `ratings.usersRated`
 8. game name in ascending alphabetical order
-9. lower BGG ID as the final stable fallback
+9. application-owned `id` in ascending order as the final stable fallback
 
 If a preference factor is inactive because the user selected **No preference**, that component is skipped during tie-breaking.
 
@@ -1496,7 +1496,7 @@ Missing poll data produces a neutral `0.50` player score and does not trigger a 
 
 Show a time caveat when:
 
-- the game's `maxplaytime` is above the selected time budget
+- the game's `playTime.maxMinutes` is above the selected time budget
 - the overrun is no more than 10%
 - the game therefore remains eligible under the Version 1 tolerance
 
@@ -1513,12 +1513,12 @@ Show a complexity caveat when:
 - the complexity component score is `0.50`
 - the overall game score still reaches the display threshold
 
-The wording depends on which side of the selected strong-match range the game's `averageweight` falls:
+The wording depends on which side of the selected strong-match range the game's `complexity.average` falls:
 
 - above the strong-match range → `This is slightly more complex than the level you selected.`
 - below the strong-match range → `This is slightly lighter than the level you selected.`
 
-No complexity caveat is shown when complexity is **No preference**, when the complexity component is `1.00`, or when `averageweight` is missing.
+No complexity caveat is shown when complexity is **No preference**, when the complexity component is `1.00`, or when `complexity.average` is missing.
 
 ### Age Caveat
 
@@ -1801,7 +1801,7 @@ Several values and mappings are still hypotheses that should be validated throug
 
 ### Complexity Threshold Validation
 
-The Version 1 `averageweight` bands are defined, but they remain provisional.
+The Version 1 `complexity.average` bands are defined, but they remain provisional.
 
 They should be tested against representative games to check whether the user-facing categories:
 

@@ -1,0 +1,566 @@
+[
+  {
+    "id": "game-178900",
+    "source": {
+      "provider": "boardgamegeek",
+      "externalId": "178900"
+    },
+    "title": "Codenames",
+    "description": "A team word game about giving one-word clues to identify the correct agents.",
+    "yearPublished": 2015,
+    "images": {
+      "thumbnailUrl": null,
+      "imageUrl": null
+    },
+    "playerRange": {
+      "min": 2,
+      "max": 8
+    },
+    "playTime": {
+      "minMinutes": 15,
+      "maxMinutes": 15
+    },
+    "age": {
+      "publisherMinimum": 10,
+      "communityPoll": [
+        {
+          "age": "8",
+          "votes": 40
+        },
+        {
+          "age": "10",
+          "votes": 95
+        },
+        {
+          "age": "12",
+          "votes": 25
+        }
+      ]
+    },
+    "complexity": {
+      "average": 1.25
+    },
+    "playerCountPoll": [
+      {
+        "players": "2",
+        "bestVotes": 10,
+        "recommendedVotes": 35,
+        "notRecommendedVotes": 90
+      },
+      {
+        "players": "4",
+        "bestVotes": 80,
+        "recommendedVotes": 100,
+        "notRecommendedVotes": 20
+      },
+      {
+        "players": "6",
+        "bestVotes": 180,
+        "recommendedVotes": 90,
+        "notRecommendedVotes": 10
+      },
+      {
+        "players": "8",
+        "bestVotes": 80,
+        "recommendedVotes": 100,
+        "notRecommendedVotes": 35
+      }
+    ],
+    "mechanics": [
+      "Communication Limits",
+      "Team-Based Game",
+      "Deduction"
+    ],
+    "categories": [
+      "Party Game",
+      "Word Game"
+    ],
+    "ratings": {
+      "bayesianAverage": 7.5,
+      "usersRated": 90000
+    },
+    "relationships": {
+      "baseGameIds": []
+    },
+    "content": {
+      "classification": "family-friendly"
+    }
+  },
+  {
+    "id": "game-163412",
+    "source": {
+      "provider": "boardgamegeek",
+      "externalId": "163412"
+    },
+    "title": "Patchwork",
+    "description": "A two-player game about building the most efficient patchwork quilt.",
+    "yearPublished": 2014,
+    "images": {
+      "thumbnailUrl": null,
+      "imageUrl": null
+    },
+    "playerRange": {
+      "min": 2,
+      "max": 2
+    },
+    "playTime": {
+      "minMinutes": 15,
+      "maxMinutes": 30
+    },
+    "age": {
+      "publisherMinimum": 8,
+      "communityPoll": []
+    },
+    "complexity": {
+      "average": 1.6
+    },
+    "playerCountPoll": [
+      {
+        "players": "2",
+        "bestVotes": 300,
+        "recommendedVotes": 30,
+        "notRecommendedVotes": 5
+      }
+    ],
+    "mechanics": [
+      "Pattern Building",
+      "Tile Placement"
+    ],
+    "categories": [
+      "Abstract Strategy"
+    ],
+    "ratings": {
+      "bayesianAverage": 7.4,
+      "usersRated": 70000
+    },
+    "relationships": {
+      "baseGameIds": []
+    },
+    "content": {
+      "classification": "family-friendly"
+    }
+  },
+  {
+    "id": "game-30549",
+    "source": {
+      "provider": "boardgamegeek",
+      "externalId": "30549"
+    },
+    "title": "Pandemic",
+    "description": "Players work together to control outbreaks and find cures before diseases spread across the world.",
+    "yearPublished": 2008,
+    "images": {
+      "thumbnailUrl": null,
+      "imageUrl": null
+    },
+    "playerRange": {
+      "min": 2,
+      "max": 4
+    },
+    "playTime": {
+      "minMinutes": 45,
+      "maxMinutes": 45
+    },
+    "age": {
+      "publisherMinimum": 8,
+      "communityPoll": [
+        {
+          "age": "8",
+          "votes": 60
+        },
+        {
+          "age": "10",
+          "votes": 100
+        }
+      ]
+    },
+    "complexity": {
+      "average": 2.39
+    },
+    "playerCountPoll": [
+      {
+        "players": "2",
+        "bestVotes": 120,
+        "recommendedVotes": 100,
+        "notRecommendedVotes": 20
+      },
+      {
+        "players": "3",
+        "bestVotes": 210,
+        "recommendedVotes": 80,
+        "notRecommendedVotes": 10
+      },
+      {
+        "players": "4",
+        "bestVotes": 150,
+        "recommendedVotes": 100,
+        "notRecommendedVotes": 25
+      }
+    ],
+    "mechanics": [
+      "Cooperative Game",
+      "Hand Management",
+      "Set Collection"
+    ],
+    "categories": [
+      "Medical"
+    ],
+    "ratings": {
+      "bayesianAverage": 7.5,
+      "usersRated": 130000
+    },
+    "relationships": {
+      "baseGameIds": []
+    },
+    "content": {
+      "classification": "family-friendly"
+    }
+  },
+  {
+    "id": "game-306735",
+    "source": {
+      "provider": "boardgamegeek",
+      "externalId": "306735"
+    },
+    "title": "Under Falling Skies",
+    "description": "A solo game about defending a city against an alien invasion.",
+    "yearPublished": 2020,
+    "images": {
+      "thumbnailUrl": null,
+      "imageUrl": null
+    },
+    "playerRange": {
+      "min": 1,
+      "max": 1
+    },
+    "playTime": {
+      "minMinutes": 20,
+      "maxMinutes": 40
+    },
+    "age": {
+      "publisherMinimum": 12,
+      "communityPoll": []
+    },
+    "complexity": {
+      "average": 2.39
+    },
+    "playerCountPoll": [
+      {
+        "players": "1+",
+        "bestVotes": 70,
+        "recommendedVotes": 15,
+        "notRecommendedVotes": 5
+      }
+    ],
+    "mechanics": [],
+    "categories": [
+      "Science Fiction"
+    ],
+    "ratings": {
+      "bayesianAverage": 7.6,
+      "usersRated": 15000
+    },
+    "relationships": {
+      "baseGameIds": []
+    },
+    "content": {
+      "classification": "family-friendly"
+    }
+  },
+  {
+    "id": "game-224517",
+    "source": {
+      "provider": "boardgamegeek",
+      "externalId": "224517"
+    },
+    "title": "Brass: Birmingham",
+    "description": "A deep economic strategy game about developing industries and transport networks.",
+    "yearPublished": 2018,
+    "images": {
+      "thumbnailUrl": null,
+      "imageUrl": null
+    },
+    "playerRange": {
+      "min": 2,
+      "max": 4
+    },
+    "playTime": {
+      "minMinutes": 60,
+      "maxMinutes": 120
+    },
+    "age": {
+      "publisherMinimum": 14,
+      "communityPoll": []
+    },
+    "complexity": {
+      "average": 3.86
+    },
+    "playerCountPoll": [
+      {
+        "players": "2",
+        "bestVotes": 80,
+        "recommendedVotes": 150,
+        "notRecommendedVotes": 45
+      },
+      {
+        "players": "3",
+        "bestVotes": 240,
+        "recommendedVotes": 100,
+        "notRecommendedVotes": 10
+      },
+      {
+        "players": "4",
+        "bestVotes": 260,
+        "recommendedVotes": 90,
+        "notRecommendedVotes": 10
+      }
+    ],
+    "mechanics": [
+      "Network and Route Building",
+      "Market",
+      "Loans",
+      "Income"
+    ],
+    "categories": [
+      "Economic",
+      "Industry / Manufacturing"
+    ],
+    "ratings": {
+      "bayesianAverage": 8.6,
+      "usersRated": 50000
+    },
+    "relationships": {
+      "baseGameIds": []
+    },
+    "content": {
+      "classification": "family-friendly"
+    }
+  },
+  {
+    "id": "game-254640",
+    "source": {
+      "provider": "boardgamegeek",
+      "externalId": "254640"
+    },
+    "title": "Just One",
+    "description": "A cooperative party game where players give unique clues to help one player guess a word.",
+    "yearPublished": 2018,
+    "images": {
+      "thumbnailUrl": null,
+      "imageUrl": null
+    },
+    "playerRange": {
+      "min": 3,
+      "max": 7
+    },
+    "playTime": {
+      "minMinutes": 20,
+      "maxMinutes": 60
+    },
+    "age": {
+      "publisherMinimum": 8,
+      "communityPoll": []
+    },
+    "complexity": {
+      "average": 1.03
+    },
+    "playerCountPoll": [
+      {
+        "players": "3",
+        "bestVotes": 15,
+        "recommendedVotes": 50,
+        "notRecommendedVotes": 60
+      },
+      {
+        "players": "5+",
+        "bestVotes": 180,
+        "recommendedVotes": 80,
+        "notRecommendedVotes": 10
+      }
+    ],
+    "mechanics": [
+      "Cooperative Game",
+      "Communication Limits"
+    ],
+    "categories": [
+      "Party Game",
+      "Word Game"
+    ],
+    "ratings": {
+      "bayesianAverage": 7.4,
+      "usersRated": 30000
+    },
+    "relationships": {
+      "baseGameIds": []
+    },
+    "content": {
+      "classification": "family-friendly"
+    }
+  },
+  {
+    "id": "game-410201",
+    "source": {
+      "provider": "boardgamegeek",
+      "externalId": "410201"
+    },
+    "title": "Wyrmspan",
+    "description": "A strategy game about excavating caves and attracting dragons to a growing sanctuary.",
+    "yearPublished": 2024,
+    "images": {
+      "thumbnailUrl": null,
+      "imageUrl": null
+    },
+    "playerRange": {
+      "min": 1,
+      "max": 5
+    },
+    "playTime": {
+      "minMinutes": 90,
+      "maxMinutes": 90
+    },
+    "age": {
+      "publisherMinimum": 14,
+      "communityPoll": []
+    },
+    "complexity": {
+      "average": 2.83
+    },
+    "playerCountPoll": [
+      {
+        "players": "2",
+        "bestVotes": 12,
+        "recommendedVotes": 6,
+        "notRecommendedVotes": 2
+      },
+      {
+        "players": "3",
+        "bestVotes": 10,
+        "recommendedVotes": 7,
+        "notRecommendedVotes": 3
+      },
+      {
+        "players": "5",
+        "bestVotes": 1,
+        "recommendedVotes": 4,
+        "notRecommendedVotes": 15
+      }
+    ],
+    "mechanics": [
+      "Hand Management",
+      "Set Collection"
+    ],
+    "categories": [
+      "Fantasy"
+    ],
+    "ratings": {
+      "bayesianAverage": 7.8,
+      "usersRated": 12000
+    },
+    "relationships": {
+      "baseGameIds": []
+    },
+    "content": {
+      "classification": "family-friendly"
+    }
+  },
+  {
+    "id": "game-290448",
+    "source": {
+      "provider": "boardgamegeek",
+      "externalId": "290448"
+    },
+    "title": "Wingspan: European Expansion",
+    "description": "An expansion that adds European birds and additional effects to Wingspan.",
+    "yearPublished": 2019,
+    "images": {
+      "thumbnailUrl": null,
+      "imageUrl": null
+    },
+    "playerRange": {
+      "min": 1,
+      "max": 5
+    },
+    "playTime": {
+      "minMinutes": 40,
+      "maxMinutes": 70
+    },
+    "age": {
+      "publisherMinimum": 10,
+      "communityPoll": []
+    },
+    "complexity": {
+      "average": 2.43
+    },
+    "playerCountPoll": [],
+    "mechanics": [
+      "Hand Management",
+      "Set Collection"
+    ],
+    "categories": [
+      "Animals"
+    ],
+    "ratings": {
+      "bayesianAverage": 8.3,
+      "usersRated": 18000
+    },
+    "relationships": {
+      "baseGameIds": [
+        "game-266192"
+      ]
+    },
+    "content": {
+      "classification": "unknown"
+    }
+  },
+  {
+    "id": "game-129622",
+    "source": {
+      "provider": "boardgamegeek",
+      "externalId": "129622"
+    },
+    "title": "Love Letter",
+    "description": null,
+    "yearPublished": 2012,
+    "images": {
+      "thumbnailUrl": null,
+      "imageUrl": null
+    },
+    "playerRange": {
+      "min": 2,
+      "max": 4
+    },
+    "playTime": {
+      "minMinutes": null,
+      "maxMinutes": 20
+    },
+    "age": {
+      "publisherMinimum": 10,
+      "communityPoll": [
+        {
+          "age": "8",
+          "votes": 60
+        },
+        {
+          "age": "10",
+          "votes": 40
+        }
+      ]
+    },
+    "complexity": {
+      "average": null
+    },
+    "playerCountPoll": [],
+    "mechanics": [],
+    "categories": [],
+    "ratings": {
+      "bayesianAverage": null,
+      "usersRated": null
+    },
+    "relationships": {
+      "baseGameIds": []
+    },
+    "content": {
+      "classification": "unknown"
+    }
+  }
+]
