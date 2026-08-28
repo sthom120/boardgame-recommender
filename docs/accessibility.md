@@ -322,8 +322,6 @@ During development:
 
 ---
 
----
-
 ## Images and Dynamic Status Messages
 
 Game images must have appropriate alternative-text behaviour.
