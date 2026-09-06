@@ -1,0 +1,31 @@
+{
+  "name": "boardgame-recommender",
+  "version": "1.0.0",
+  "description": "A portfolio project that recommends board games using BoardGameGeek data and explainable recommendation logic.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+  "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+  "dev:server": "npm run dev --prefix server",
+  "dev:client": "npm run dev --prefix client",
+  "lint": "npm run lint --prefix client"
+},
+
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sthom120/boardgame-recommender.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/sthom120/boardgame-recommender/issues"
+  },
+  "homepage": "https://github.com/sthom120/boardgame-recommender#readme",
+  "devDependencies": {
+    "concurrently": "^10.0.5"
+  }
+}
