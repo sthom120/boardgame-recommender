@@ -100,18 +100,14 @@ const contentOptions = [
   },
 ]
 
-function Questionnaire({ onBackToStart }) {
-  const [currentStep, setCurrentStep] = useState(1)
-
-  const [answers, setAnswers] = useState({
-    players: '',
-    time: '',
-    complexity: '',
-    mood: [],
-    style: [],
-    youngestPlayerAge: '',
-    contentPreference: '',
-  })
+function Questionnaire({
+  answers,
+  setAnswers,
+  currentStep,
+  setCurrentStep,
+  onBackToStart,
+  onReview,
+}) {
 
   const [error, setError] = useState('')
   const [completeMessage, setCompleteMessage] = useState('')
@@ -167,11 +163,13 @@ function Questionnaire({ onBackToStart }) {
   }
 
   function handlePlayerInput(event) {
-    updateAnswer('players', event.target.value)
+    const value = event.target.value.replace(/\D/g, '')
+    updateAnswer('players', value)
   }
 
   function handleAgeInput(event) {
-    updateAnswer('youngestPlayerAge', event.target.value)
+    const value = event.target.value.replace(/\D/g, '')
+    updateAnswer('youngestPlayerAge', value)
   }
 
   function validateCurrentStep() {
@@ -245,10 +243,7 @@ function Questionnaire({ onBackToStart }) {
 
       console.log('Completed questionnaire:', completedAnswers)
 
-      setCompleteMessage(
-        'Questionnaire complete. The review screen will be added next.',
-      )
-
+      onReview()
       return
     }
 
@@ -361,9 +356,9 @@ function Questionnaire({ onBackToStart }) {
                 </span>
 
                 <input
-                  type="number"
-                  min="1"
-                  step="1"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={answers.players}
                   onChange={handlePlayerInput}
                   aria-describedby={
@@ -502,9 +497,9 @@ function Questionnaire({ onBackToStart }) {
 
               <input
                 id="youngest-player-age"
-                type="number"
-                min="0"
-                step="1"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={answers.youngestPlayerAge}
                 onChange={handleAgeInput}
                 aria-describedby={
