@@ -689,8 +689,8 @@ The frontend should send application-owned values rather than BoardGameGeek term
   "players": 4,
   "time": "up-to-120",
   "complexity": "moderate",
-  "mood": "strategic",
-  "style": "building-collecting",
+  "mood": ["strategic", "social"],
+  "style": ["building-collecting", "planning-managing"],
   "youngestPlayerAge": 10,
   "contentPreference": "family-friendly"
 }
@@ -705,12 +705,14 @@ The frontend should send application-owned values rather than BoardGameGeek term
 | `players` | integer | yes | Whole number `>= 1` |
 | `time` | string | yes | `up-to-20`, `up-to-30`, `up-to-60`, `up-to-120`, `over-120`, `no-preference` |
 | `complexity` | string | yes | `light`, `some-strategy`, `moderate`, `deep`, `no-preference` |
-| `mood` | string | yes | `relaxed`, `social`, `competitive`, `cooperative`, `strategic`, `immersive`, `chaotic`, `no-preference` |
-| `style` | string | yes | `working-things-out`, `building-collecting`, `planning-managing`, `talking-guessing`, `working-together`, `competing-directly`, `theme-story`, `quick-simple`, `no-preference` |
+| `mood` | string[] | yes | One or two of: `relaxed`, `social`, `competitive`, `cooperative`, `strategic`, `immersive`, `chaotic`, `no-preference` |
+| `style` | string[] | yes | One or two of: `working-things-out`, `building-collecting`, `planning-managing`, `talking-guessing`, `working-together`, `competing-directly`, `theme-story`, `quick-simple`, `no-preference` |
 | `youngestPlayerAge` | integer | yes | Whole number `>= 0` |
 | `contentPreference` | string | yes | `family-friendly`, `mature-okay`, `no-preference` |
 
 The questionnaire contains six questions, but Q6 supplies two request fields: `youngestPlayerAge` and `contentPreference`. The recommendation request therefore contains seven fields.
+
+`mood` and `style` are arrays because the user may select one or two preferences for each of those questions. If `no-preference` is selected for either field, it must be the only value in that array.
 
 ---
 
@@ -797,7 +799,7 @@ The recommendation service translates these application-owned values into the Ve
 
 ### `mood`
 
-Allowed values:
+Allowed values inside the array:
 
 ```text
 relaxed
@@ -812,17 +814,37 @@ no-preference
 
 These correspond to the user-facing experience choices defined in the recommendation-engine specification.
 
-Only one mood preference is accepted in Version 1.
+Version 1 accepts one or two mood preferences. The field is always an array, including when the user chooses only one mood.
 
-The frontend does not attempt to map the selected mood to mechanics or categories.
+Examples:
 
-That mapping belongs to the recommendation service.
+```json
+{
+  "mood": ["strategic"]
+}
+```
+
+```json
+{
+  "mood": ["strategic", "social"]
+}
+```
+
+If `no-preference` is selected, the only valid representation is:
+
+```json
+{
+  "mood": ["no-preference"]
+}
+```
+
+The frontend does not attempt to map selected moods to mechanics or categories. That mapping belongs to the recommendation service.
 
 ---
 
 ### `style`
 
-Allowed values:
+Allowed values inside the array:
 
 ```text
 working-things-out
@@ -836,11 +858,31 @@ quick-simple
 no-preference
 ```
 
-Only one game-style preference is accepted in Version 1.
+Version 1 accepts one or two game-style preferences. The field is always an array, including when the user chooses only one style.
 
-The frontend sends the application-owned value.
+Examples:
 
-The recommendation service determines which game mechanics, categories or structured characteristics provide evidence for that style.
+```json
+{
+  "style": ["building-collecting"]
+}
+```
+
+```json
+{
+  "style": ["building-collecting", "planning-managing"]
+}
+```
+
+If `no-preference` is selected, the only valid representation is:
+
+```json
+{
+  "style": ["no-preference"]
+}
+```
+
+The frontend sends application-owned values. The recommendation service determines which game mechanics, categories or structured characteristics provide evidence for each selected style.
 
 ---
 
@@ -906,8 +948,10 @@ A valid request must:
 2. contain a valid integer player count
 3. contain a valid youngest-player age
 4. use only recognised questionnaire option values
-5. contain only one value for mood
-6. contain only one value for style
+5. contain one or two recognised mood values in an array
+6. contain one or two recognised style values in an array
+7. not combine `no-preference` with another mood or style selection
+8. not contain duplicate mood or style selections
 
 An invalid request should not be silently corrected into a different preference.
 
@@ -936,6 +980,22 @@ Similarly, an unknown value such as:
 ```
 
 should produce a validation error rather than being guessed as one of the recognised complexity choices.
+
+The backend should also reject invalid multi-select combinations such as:
+
+```json
+{
+  "mood": ["social", "strategic", "competitive"]
+}
+```
+
+or:
+
+```json
+{
+  "style": ["no-preference", "building-collecting"]
+}
+```
 
 This keeps questionnaire behaviour deterministic and testable.
 
