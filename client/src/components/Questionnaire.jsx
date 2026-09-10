@@ -1,30 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 
 const timeOptions = [
-  {
-    value: 'up-to-20',
-    label: 'Up to 20 minutes',
-  },
-  {
-    value: 'up-to-30',
-    label: 'About 30 minutes',
-  },
-  {
-    value: 'up-to-60',
-    label: 'About 45–60 minutes',
-  },
-  {
-    value: 'up-to-120',
-    label: 'About 1–2 hours',
-  },
-  {
-    value: 'over-120',
-    label: 'More than 2 hours',
-  },
-  {
-    value: 'no-preference',
-    label: 'No preference',
-  },
+  { value: 'up-to-20', label: 'Up to 20 minutes' },
+  { value: 'up-to-30', label: 'About 30 minutes' },
+  { value: 'up-to-60', label: 'About 45–60 minutes' },
+  { value: 'up-to-120', label: 'About 1–2 hours' },
+  { value: 'over-120', label: 'More than 2 hours' },
+  { value: 'no-preference', label: 'No preference' },
 ]
 
 const complexityOptions = [
@@ -34,15 +16,18 @@ const complexityOptions = [
   },
   {
     value: 'some-strategy',
-    label: 'Some strategy — easy to learn, but still gives you things to think about',
+    label:
+      'Some strategy — easy to learn, but still gives you things to think about',
   },
   {
     value: 'moderate',
-    label: 'Moderately challenging — more rules, planning and meaningful decisions',
+    label:
+      'Moderately challenging — more rules, planning and meaningful decisions',
   },
   {
     value: 'deep',
-    label: 'Deep and challenging — lots to think about, with more rules and strategy',
+    label:
+      'Deep and challenging — lots to think about, with more rules and strategy',
   },
   {
     value: 'no-preference',
@@ -51,38 +36,14 @@ const complexityOptions = [
 ]
 
 const moodOptions = [
-  {
-    value: 'relaxed',
-    label: 'Relaxed & easy-going',
-  },
-  {
-    value: 'social',
-    label: 'Social & lively',
-  },
-  {
-    value: 'competitive',
-    label: 'Competitive',
-  },
-  {
-    value: 'cooperative',
-    label: 'Cooperative',
-  },
-  {
-    value: 'strategic',
-    label: 'Strategic & thoughtful',
-  },
-  {
-    value: 'immersive',
-    label: 'Immersive & thematic',
-  },
-  {
-    value: 'chaotic',
-    label: 'Funny, silly & chaotic',
-  },
-  {
-    value: 'no-preference',
-    label: 'No preference',
-  },
+  { value: 'relaxed', label: 'Relaxed & easy-going' },
+  { value: 'social', label: 'Social & lively' },
+  { value: 'competitive', label: 'Competitive' },
+  { value: 'cooperative', label: 'Cooperative' },
+  { value: 'strategic', label: 'Strategic & thoughtful' },
+  { value: 'immersive', label: 'Immersive & thematic' },
+  { value: 'chaotic', label: 'Funny, silly & chaotic' },
+  { value: 'no-preference', label: 'No preference' },
 ]
 
 const styleOptions = [
@@ -146,8 +107,8 @@ function Questionnaire({ onBackToStart }) {
     players: '',
     time: '',
     complexity: '',
-    mood: '',
-    style: '',
+    mood: [],
+    style: [],
     youngestPlayerAge: '',
     contentPreference: '',
   })
@@ -168,6 +129,34 @@ function Questionnaire({ onBackToStart }) {
 
     setError('')
     setCompleteMessage('')
+  }
+
+  function toggleMultiChoice(field, value) {
+    const currentValues = answers[field]
+
+    if (value === 'no-preference') {
+      updateAnswer(field, ['no-preference'])
+      return
+    }
+
+    if (currentValues.includes(value)) {
+      updateAnswer(
+        field,
+        currentValues.filter((selectedValue) => selectedValue !== value),
+      )
+      return
+    }
+
+    const withoutNoPreference = currentValues.filter(
+      (selectedValue) => selectedValue !== 'no-preference',
+    )
+
+    if (withoutNoPreference.length >= 2) {
+      setError('Choose up to two options.')
+      return
+    }
+
+    updateAnswer(field, [...withoutNoPreference, value])
   }
 
   function changePlayers(amount) {
@@ -202,12 +191,12 @@ function Questionnaire({ onBackToStart }) {
       return 'Choose how involved you would like the game to feel.'
     }
 
-    if (currentStep === 4 && !answers.mood) {
-      return 'Choose the kind of experience you are in the mood for.'
+    if (currentStep === 4 && answers.mood.length === 0) {
+      return 'Choose at least one kind of experience.'
     }
 
-    if (currentStep === 5 && !answers.style) {
-      return 'Choose the style of game that sounds fun to you.'
+    if (currentStep === 5 && answers.style.length === 0) {
+      return 'Choose at least one style of play.'
     }
 
     if (currentStep === 6) {
@@ -294,7 +283,36 @@ function Questionnaire({ onBackToStart }) {
                 name={name}
                 value={option.value}
                 checked={value === option.value}
-                onChange={(event) => updateAnswer(name, event.target.value)}
+                onChange={(event) =>
+                  updateAnswer(name, event.target.value)
+                }
+              />
+
+              <span>{option.label}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+    )
+  }
+
+  function renderMultiChoiceList(name, values, options, legend) {
+    return (
+      <fieldset
+        className="choice-fieldset"
+        aria-describedby={error ? 'question-error' : undefined}
+      >
+        <legend className="visually-hidden">{legend}</legend>
+
+        <div className="choice-list">
+          {options.map((option) => (
+            <label className="choice-option" key={option.value}>
+              <input
+                type="checkbox"
+                name={name}
+                value={option.value}
+                checked={values.includes(option.value)}
+                onChange={() => toggleMultiChoice(name, option.value)}
               />
 
               <span>{option.label}</span>
@@ -348,7 +366,9 @@ function Questionnaire({ onBackToStart }) {
                   step="1"
                   value={answers.players}
                   onChange={handlePlayerInput}
-                  aria-describedby={error ? 'question-error' : undefined}
+                  aria-describedby={
+                    error ? 'question-error' : undefined
+                  }
                   aria-invalid={error ? 'true' : 'false'}
                 />
               </label>
@@ -423,15 +443,15 @@ function Questionnaire({ onBackToStart }) {
             </h1>
 
             <p className="question-helper">
-              Choose the option that best describes how you'd like the game
-              to feel.
+              Choose one or two options that best describe how you'd like
+              the game to feel.
             </p>
 
-            {renderChoiceList(
+            {renderMultiChoiceList(
               'mood',
               answers.mood,
               moodOptions,
-              'Desired game experience',
+              'Desired game experience. Choose up to two.',
             )}
           </>
         )}
@@ -447,15 +467,15 @@ function Questionnaire({ onBackToStart }) {
             </h1>
 
             <p className="question-helper">
-              Don't worry about knowing board-game terms. Just choose the
-              type of play that sounds most appealing.
+              Choose one or two styles that sound most appealing. You
+              don't need to know any board-game terms.
             </p>
 
-            {renderChoiceList(
+            {renderMultiChoiceList(
               'style',
               answers.style,
               styleOptions,
-              'Preferred play style',
+              'Preferred play style. Choose up to two.',
             )}
           </>
         )}
@@ -471,8 +491,8 @@ function Questionnaire({ onBackToStart }) {
             </h1>
 
             <p className="question-helper">
-              We'll use the youngest player's age to avoid recommending games
-              that may not suit everyone in your group.
+              We'll use the youngest player's age to avoid recommending
+              games that may not suit everyone in your group.
             </p>
 
             <div className="age-input-group">
@@ -487,7 +507,9 @@ function Questionnaire({ onBackToStart }) {
                 step="1"
                 value={answers.youngestPlayerAge}
                 onChange={handleAgeInput}
-                aria-describedby={error ? 'question-error' : undefined}
+                aria-describedby={
+                  error ? 'question-error' : undefined
+                }
               />
             </div>
 
