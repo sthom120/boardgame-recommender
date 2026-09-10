@@ -1,184 +1,369 @@
-.counter {
-  font-size: 16px;
-  padding: 5px 10px;
-  border-radius: 5px;
-  color: var(--accent);
-  background: var(--accent-bg);
-  border: 2px solid transparent;
-  transition: border-color 0.3s;
-  margin-bottom: 24px;
+/* =========================================================
+   SHARED PAGE LAYOUT
+   Used by the questionnaire and other main app screens.
+   ========================================================= */
 
-  &:hover {
-    border-color: var(--accent-border);
-  }
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
+.app-page {
+  width: min(100% - 40px, 900px);
+  margin: 0 auto;
+  padding: 48px 0;
 }
 
-.hero {
-  position: relative;
 
-  .base,
-  .framework,
-  .vite {
-    inset-inline: 0;
-    margin: 0 auto;
-  }
+/* =========================================================
+   LANDING PAGE
+   Main layout and card shown when the app first opens.
+   ========================================================= */
 
-  .base {
-    width: 170px;
-    position: relative;
-    z-index: 0;
-  }
-
-  .framework,
-  .vite {
-    position: absolute;
-  }
-
-  .framework {
-    z-index: 1;
-    top: 34px;
-    height: 28px;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg)
-      scale(1.4);
-  }
-
-  .vite {
-    z-index: 0;
-    top: 107px;
-    height: 26px;
-    width: auto;
-    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg)
-      scale(0.8);
-  }
-}
-
-#center {
+.landing-page {
+  min-height: 100vh;
   display: flex;
-  flex-direction: column;
-  gap: 25px;
-  place-content: center;
-  place-items: center;
-  flex-grow: 1;
-
-  @media (max-width: 1024px) {
-    padding: 32px 20px 24px;
-    gap: 18px;
-  }
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
 }
 
-#next-steps {
-  display: flex;
-  border-top: 1px solid var(--border);
-  text-align: left;
-
-  & > div {
-    flex: 1 1 0;
-    padding: 32px;
-    @media (max-width: 1024px) {
-      padding: 24px 20px;
-    }
-  }
-
-  .icon {
-    margin-bottom: 16px;
-    width: 22px;
-    height: 22px;
-  }
-
-  @media (max-width: 1024px) {
-    flex-direction: column;
-    text-align: center;
-  }
-}
-
-#docs {
-  border-right: 1px solid var(--border);
-
-  @media (max-width: 1024px) {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-}
-
-#next-steps ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  gap: 8px;
-  margin: 32px 0 0;
-
-  .logo {
-    height: 18px;
-  }
-
-  a {
-    color: var(--text-h);
-    font-size: 16px;
-    border-radius: 6px;
-    background: var(--social-bg);
-    display: flex;
-    padding: 6px 12px;
-    align-items: center;
-    gap: 8px;
-    text-decoration: none;
-    transition: box-shadow 0.3s;
-
-    &:hover {
-      box-shadow: var(--shadow);
-    }
-    .button-icon {
-      height: 18px;
-      width: 18px;
-    }
-  }
-
-  @media (max-width: 1024px) {
-    margin-top: 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-
-    li {
-      flex: 1 1 calc(50% - 8px);
-    }
-
-    a {
-      width: 100%;
-      justify-content: center;
-      box-sizing: border-box;
-    }
-  }
-}
-
-#spacer {
-  height: 88px;
-  border-top: 1px solid var(--border);
-  @media (max-width: 1024px) {
-    height: 48px;
-  }
-}
-
-.ticks {
-  position: relative;
+.landing-card {
   width: 100%;
+  max-width: 720px;
+  padding: 64px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  text-align: center;
+}
 
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    top: -4.5px;
-    border: 5px solid transparent;
+
+/* =========================================================
+   LANDING PAGE TEXT
+   App name, main heading, introduction and reassurance.
+   ========================================================= */
+
+.app-name {
+  margin: 0 0 28px;
+  color: var(--accent);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.landing-card h1 {
+  max-width: 600px;
+  margin: 0 auto 24px;
+  font-size: clamp(2.25rem, 6vw, 4rem);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+
+.landing-intro {
+  max-width: 560px;
+  margin: 0 auto 36px;
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  line-height: 1.65;
+}
+
+.landing-reassurance {
+  margin: 18px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+
+/* =========================================================
+   PRIMARY BUTTON
+   Main action button, such as "Find my game" and "Next".
+   ========================================================= */
+
+.primary-button {
+  min-height: 52px;
+  padding: 14px 28px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.primary-button:hover {
+  background: var(--accent-hover);
+}
+
+.primary-button:active {
+  transform: translateY(1px);
+}
+
+
+/* =========================================================
+   SECONDARY BUTTON
+   Used for secondary actions such as "Back".
+   ========================================================= */
+
+.secondary-button {
+  min-height: 52px;
+  padding: 14px 28px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-primary);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+
+/* =========================================================
+   QUESTIONNAIRE LAYOUT
+   Main container, progress indicator, heading and helper text.
+   ========================================================= */
+
+.question-card {
+  max-width: 720px;
+  margin: 40px auto 0;
+}
+
+.question-progress {
+  margin: 0 0 16px;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.question-card h1 {
+  margin: 0 0 16px;
+  font-size: clamp(2rem, 5vw, 3.25rem);
+  line-height: 1.1;
+}
+
+.question-helper {
+  margin: 0 0 40px;
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+
+/* =========================================================
+   QUESTION 1 — PLAYER COUNT
+   Minus button, number input and plus button.
+   ========================================================= */
+
+.number-control {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.number-button {
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.number-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.player-input-group input {
+  width: 90px;
+  min-height: 52px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+
+/* =========================================================
+   QUESTIONS 2–5 AND CONTENT CHOICES
+   Radio-button option cards used throughout the questionnaire.
+   ========================================================= */
+
+.choice-fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.choice-list {
+  display: grid;
+  gap: 12px;
+}
+
+.choice-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 56px;
+  padding: 14px 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.choice-option:hover {
+  border-color: var(--accent);
+}
+
+.choice-option:has(input:checked) {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.choice-option input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.choice-option span {
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   QUESTION 6 — AGE AND CONTENT
+   Youngest-player age input and content-preference heading.
+   ========================================================= */
+
+.age-input-group {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 40px;
+}
+
+.age-input-group label {
+  font-weight: 700;
+}
+
+.age-input-group input {
+  width: 120px;
+  min-height: 52px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: 1.1rem;
+}
+
+.content-heading {
+  margin: 0 0 20px;
+  font-size: 1.25rem;
+}
+
+
+/* =========================================================
+   QUESTION NAVIGATION
+   Back and Next/Finish buttons at the bottom of each question.
+   ========================================================= */
+
+.question-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 48px;
+}
+
+
+/* =========================================================
+   VALIDATION AND COMPLETION MESSAGES
+   Error feedback and temporary questionnaire-complete message.
+   ========================================================= */
+
+.form-error {
+  margin: 16px 0 0;
+  font-weight: 600;
+}
+
+.question-complete {
+  margin-top: 24px;
+  padding: 16px;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  background: var(--surface);
+  font-weight: 600;
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+   Content available to screen readers but visually hidden.
+   Also prevents the programmatically focused heading from
+   showing an unnecessary outline.
+   ========================================================= */
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+#question-heading:focus {
+  outline: none;
+}
+
+
+/* =========================================================
+   MOBILE / SMALL SCREEN STYLES
+   Adjusts spacing and button layout for narrow screens.
+   ========================================================= */
+
+@media (max-width: 600px) {
+  .app-page {
+    width: min(100% - 32px, 900px);
+    padding: 32px 0;
   }
 
-  &::before {
-    left: 0;
-    border-left-color: var(--border);
+  .landing-page {
+    padding: 16px;
   }
-  &::after {
-    right: 0;
-    border-right-color: var(--border);
+
+  .landing-card {
+    padding: 40px 24px;
+    border-radius: 14px;
+  }
+
+  .landing-intro {
+    font-size: 1rem;
+  }
+
+  .primary-button {
+    width: 100%;
+  }
+
+  .question-card {
+    margin-top: 16px;
+  }
+
+  .question-actions {
+    margin-top: 40px;
+  }
+
+  .question-actions button {
+    flex: 1;
   }
 }

@@ -99,7 +99,7 @@ Version 1 numeric thresholds are defined in the Complexity Score section and wil
 
 **Question:** What kind of experience are you looking for?
 
-Version 1 allows the user to select **one** mood option or **No preference**.
+Version 1 allows the user to select **one or two** mood options, or **No preference**.
 
 Suggested choices:
 
@@ -112,11 +112,13 @@ Suggested choices:
 - **Chaotic and funny** — unpredictable, silly or high-energy play
 - **No preference**
 
+If **No preference** is selected, it must be the only mood selection.
+
 Mood is not a direct BoardGameGeek field.
 
 The application will derive mood signals from combinations of mechanics, categories and other game characteristics using transparent rules.
 
-A game may match more than one mood, but the user selects only one mood preference in Version 1.
+A game may match more than one mood, and allowing up to two user selections lets the questionnaire represent combinations such as social and competitive or strategic and immersive.
 
 Mood is a **weighted preference**, not a hard filter.
 
@@ -126,7 +128,7 @@ Mood is a **weighted preference**, not a hard filter.
 
 **Question:** What sounds fun to you?
 
-Version 1 allows the user to select **one** style option or **No preference**.
+Version 1 allows the user to select **one or two** style options, or **No preference**.
 
 Suggested choices:
 
@@ -140,13 +142,15 @@ Suggested choices:
 - **Something quick and simple** — easy decisions and fast turns
 - **No preference**
 
+If **No preference** is selected, it must be the only style selection.
+
 These user-facing styles will be mapped to BoardGameGeek mechanics and, where useful, categories.
 
 The application should not show specialist mechanic names unless they are explained in plain language.
 
 Game style is a **weighted preference**.
 
-A game can match several styles at the same time, but the user selects only one style preference in Version 1.
+A game can match several styles at the same time, and the user may select up to two style preferences in Version 1.
 
 ---
 
@@ -411,21 +415,25 @@ Selecting **No preference** removes complexity from scoring.
 
 #### Experience or Mood
 
-Games matching the selected experience or mood should receive additional score.
+Games matching one or both of the user's selected experiences or moods should receive additional score.
 
 A game may match several mood signals.
 
 A mood mismatch should not normally exclude an otherwise suitable game.
 
+When two moods are selected, their individual match scores are averaged into one mood component before the existing mood weight is applied.
+
 Selecting **No preference** removes mood from scoring.
 
 #### Preferred Game Style
 
-Games whose mechanics or characteristics match the user's selected style should receive additional score.
+Games whose mechanics or characteristics match one or both of the user's selected styles should receive additional score.
 
 Games may match more than one style.
 
 A style mismatch should reduce preference fit rather than make the game automatically ineligible.
+
+When two styles are selected, their individual match scores are averaged into one style component before the existing style weight is applied.
 
 Selecting **No preference** removes game style from scoring.
 
@@ -438,8 +446,8 @@ Selecting **No preference** removes game style from scoring.
 | Number of players | Hard constraint + player-count suitability score |
 | Available play time | Weighted preference with a 10% exclusion boundary |
 | Desired complexity | Weighted preference |
-| Experience / mood | Weighted preference |
-| Preferred game style | Weighted preference |
+| Experience / mood | Weighted preference; one or two selections share the same factor weight |
+| Preferred game style | Weighted preference; one or two selections share the same factor weight |
 | Age suitability | Hard constraint |
 | Content preference | Conditional hard constraint when Family-friendly only is selected |
 
@@ -447,11 +455,51 @@ Selecting **No preference** removes game style from scoring.
 
 Where **No preference** is available, selecting it means that factor contributes neither a bonus nor a penalty.
 
+For `mood` and `style`, **No preference** must be the sole value in the relevant array. It cannot be combined with another selection.
+
 The factor is removed from both its relevant filtering behaviour and weighted scoring, except where a separate hard requirement still applies.
 
 The engine should not treat **No preference** as a neutral category that games must match.
 
 This prevents users from being disadvantaged for deliberately leaving a preference open.
+
+### Multiple Mood and Style Selections
+
+Allowing two mood or style selections must not increase that factor's importance in the overall score.
+
+The Version 1 factor weights remain:
+
+- mood: `20%`
+- style: `15%`
+
+For each selected mood or style, the engine first calculates the normal individual component score using the mappings in this document.
+
+If one preference is selected, that individual score becomes the factor component.
+
+If two preferences are selected, the factor component is the arithmetic mean of the two individual scores:
+
+```text
+(first selected preference score + second selected preference score) / 2
+```
+
+For example, if the user selects **Social** and **Strategic** and a game receives:
+
+```text
+Social:    1.00
+Strategic: 0.50
+```
+
+then the mood component is:
+
+```text
+(1.00 + 0.50) / 2 = 0.75
+```
+
+The `0.75` mood component is then multiplied by the normal `20%` mood weight.
+
+This approach rewards games that satisfy both selected preferences without giving users extra scoring power simply because they selected two options.
+
+The same averaging rule applies to style selections.
 
 ### Missing Source Data Behaviour
 
@@ -463,7 +511,7 @@ Version 1 uses explicit rules for missing normalised source fields so that indiv
 | Publisher minimum age | Exclude the game when youngest-player age is supplied |
 | `playTime.maxMinutes` with a defined time budget | Exclude the game because time eligibility cannot be verified |
 | `complexity.average` with an active complexity preference | Assign complexity component `0.00` and do not use complexity as an explanation reason |
-| Mechanics/categories needed for an active mood or style | Treat missing lists as empty; the relevant mood/style component is `0.00` unless another documented structured signal produces a match |
+| Mechanics/categories needed for an active mood or style | Treat missing lists as empty; each affected selected mood/style receives `0.00` unless another documented structured signal produces a match |
 | Community player-count poll | Use the documented neutral player-count score of `0.50` |
 | Normalised rating tie-break fields | Skip the missing field and continue to the next tie-break rule |
 
@@ -495,13 +543,15 @@ For each candidate game:
 
 3. Calculate scores for the remaining preference factors.
 
-4. Apply the relevant weight to each factor.
+4. For mood and style, average the selected preference scores when two values are active.
 
-5. Combine the weighted scores.
+5. Apply the relevant weight to each factor.
 
-6. Rank games from strongest to weakest match.
+6. Combine the weighted scores.
 
-7. Generate an explanation and any relevant caveat.
+7. Rank games from strongest to weakest match.
+
+8. Generate an explanation and any relevant caveat.
 
 ---
 
@@ -520,6 +570,8 @@ Age and reliable content suitability are not included in the weighted total beca
 
 These weights are initial hypotheses and may be adjusted after recommendation testing.
 
+Selecting two moods or two styles does not change these weights. The selected values are combined into a single mood or style component before the factor weight is applied.
+
 ### Why Player Count Has the Highest Weight
 
 A game may technically support a particular number of players while being substantially better or worse at that count.
@@ -533,6 +585,8 @@ Player-count suitability therefore receives slightly more weight than the other 
 ## Handling "No Preference"
 
 If the user chooses **No preference** for a weighted factor, that factor is removed from the calculation.
+
+For mood and style, the request represents this as an array containing only `no-preference`.
 
 The remaining active weights are then normalised so that the final internal score still represents the strength of the available evidence.
 
@@ -555,6 +609,8 @@ Each active preference factor will initially produce a component score between `
 | `0.00` | No meaningful fit |
 
 The exact rules for producing these component scores are defined below.
+
+Mood and style may also produce intermediate values such as `0.25` or `0.75` when two selected preferences are averaged.
 
 ---
 
@@ -861,15 +917,34 @@ Each mood has:
 
 ### Mood Scoring Rule
 
-For the user's selected mood:
+For each selected mood:
 
-| Evidence | Component score |
+| Evidence | Individual score |
 | --- | ---: |
 | At least one primary signal | `1.00` |
 | No primary signal, but at least one secondary signal | `0.50` |
 | No mapped signal | `0.00` |
 
+If one mood is selected, its individual score is the mood component.
+
+If two moods are selected, calculate both individual scores and average them:
+
+```text
+(first mood score + second mood score) / 2
+```
+
+For example:
+
+```text
+Selected moods: Social and Strategic
+Social score:    1.00
+Strategic score: 0.50
+Mood component:  0.75
+```
+
 A game may match several moods at once.
+
+Selecting **No preference** removes the mood factor entirely; it is not scored as a mood.
 
 The mappings below define the Version 1 rules.
 
@@ -1054,15 +1129,34 @@ Each user-facing style has primary and secondary source signals.
 
 ### Style Scoring Rule
 
-For the user's selected style:
+For each selected style:
 
-| Evidence | Component score |
+| Evidence | Individual score |
 | --- | ---: |
 | At least one primary signal | `1.00` |
 | No primary signal, but at least one secondary signal | `0.50` |
 | No mapped signal | `0.00` |
 
+If one style is selected, its individual score is the style component.
+
+If two styles are selected, calculate both individual scores and average them:
+
+```text
+(first style score + second style score) / 2
+```
+
+For example:
+
+```text
+Selected styles: Building and Collecting + Planning and Managing
+Building and Collecting score: 1.00
+Planning and Managing score:    0.50
+Style component:                0.75
+```
+
 A game may match more than one style.
+
+Selecting **No preference** removes the style factor entirely; it is not scored as a style.
 
 ---
 
@@ -1308,6 +1402,7 @@ Testing should identify cases where:
 - one common mechanic creates too many unrelated matches
 - primary and secondary evidence should be reclassified
 - additional mechanics or categories need explicit mappings
+- two selected mood or style preferences combine sensibly under the averaging rule
 
 Changes should be documented so that the recommendation model remains explainable.
 
@@ -1329,7 +1424,7 @@ Version 1 uses explicit fallback behaviour when required BGG source fields are m
 | Publisher minimum age | Exclude the game when a youngest-player age is supplied |
 | Community age poll | Keep the game; no community-age caveat is generated |
 | Content classification | Treat as `unknown` |
-| Mechanics/categories used for selected mood or style | Unmapped or absent signals contribute no mood/style evidence |
+| Mechanics/categories used for selected mood or style | Unmapped or absent signals contribute no evidence to each affected selected preference before averaging |
 | `ratings.bayesianAverage` or `ratings.usersRated` | Skip that tie-break field and continue to the next rule |
 
 For normalised numeric fields, non-numeric values, `N/A`, null values and invalid zero values are treated as missing where the field is expected to be positive.
@@ -1577,6 +1672,8 @@ If cooperative style is also one of the two strongest factors:
 
 > A strong fit for 4 players, with the cooperative style you selected.
 
+When the user selected two moods or styles, the explanation should name only preferences supported by actual matching evidence. It must not imply that a game matched both selections when only one contributed meaningful evidence.
+
 The explanation must:
 
 - refer to real scoring factors
@@ -1776,6 +1873,32 @@ This scenario tests whether dynamic weight normalisation works correctly.
 
 ---
 
+### Scenario 7 — Combined Mood and Style Preferences
+
+#### User Answers
+
+- Players: 4
+- Time: About 45–60 minutes
+- Complexity: Some strategy
+- Mood: Social and lively; Competitive
+- Style: Talking and guessing; Competing directly
+- Youngest player: 14
+- Content preference: No preference
+
+#### Expected Recommendation Characteristics
+
+The recommendation engine should:
+
+- calculate Social and Competitive mood scores separately and average them into one mood component
+- calculate Talking and Guessing and Competing Directly style scores separately and average them into one style component
+- keep the overall mood weight at 20% and style weight at 15%
+- favour games that provide evidence for both selected preferences over otherwise similar games that match only one
+- still allow a game that strongly matches one selection to receive partial factor credit rather than automatically excluding it
+
+This scenario specifically tests that selecting two options adds nuance without increasing the total scoring weight of mood or style.
+
+---
+
 ## Scenario Testing Purpose
 
 These scenarios should later become part of recommendation-engine testing.
@@ -1787,6 +1910,7 @@ For each scenario, testing should check:
 - whether partial matches behave sensibly
 - whether caveats appear only when useful
 - whether "No preference" factors are removed correctly
+- whether one- and two-selection mood/style requests are combined correctly
 - whether explanations accurately reflect the factors that affected ranking
 
 The initial scoring weights and thresholds should be adjusted if repeated testing produces recommendations that do not match reasonable expectations.
@@ -1867,6 +1991,7 @@ These mappings should be tested against representative games to identify cases w
 - an obvious mood is missing
 - one mechanic causes too many unrelated matches
 - a primary signal should instead be secondary, or vice versa
+- averaging two selected moods produces sensible ranking behaviour
 
 Changes should be deliberate and documented.
 
@@ -1876,7 +2001,7 @@ Changes should be deliberate and documented.
 
 Version 1 also contains explicit mappings for each user-facing game style.
 
-Testing should determine whether those mappings produce sensible results across varied game types.
+Testing should determine whether those mappings produce sensible results across varied game types and whether averaging two selected styles gives useful results.
 
 Additional BGG mechanics or categories may be added to the mappings later when there is a clear reason to do so.
 
@@ -1945,15 +2070,16 @@ The MVP recommendation strategy is currently:
    - complexity fit
    - experience / mood fit
    - game-style fit
-9. Remove any weighted factor where the user selected **No preference**.
-10. Normalise the remaining active weights.
-11. Calculate and rank games by final internal score.
-12. Resolve ties using the documented tie-break sequence.
-13. Keep only games scoring at least `0.55`.
-14. Return up to five qualifying recommendations.
-15. Generate plain-language explanations from the strongest scoring factors.
-16. Show caveats only when one of the explicit Version 1 caveat rules is triggered.
-17. Show limited-match or no-match messaging when too few games qualify.
+9. Where two moods or two styles are selected, average their individual scores into the relevant factor component.
+10. Remove any weighted factor where the user selected **No preference**.
+11. Normalise the remaining active weights.
+12. Calculate and rank games by final internal score.
+13. Resolve ties using the documented tie-break sequence.
+14. Keep only games scoring at least `0.55`.
+15. Return up to five qualifying recommendations.
+16. Generate plain-language explanations from the strongest scoring factors.
+17. Show caveats only when one of the explicit Version 1 caveat rules is triggered.
+18. Show limited-match or no-match messaging when too few games qualify.
 
 The recommendation engine is deliberately transparent, rule-based and testable.
 
