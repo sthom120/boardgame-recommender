@@ -25,7 +25,7 @@ Q4 — Desired experience / mood
       ↓
 Q5 — Preferred play style
       ↓
-Q6 — Age range and content suitability
+Q6 — Youngest player age and content suitability
       ↓
 Review answers
       ↓
@@ -93,13 +93,13 @@ A "No preference" option is not appropriate for this question.
 **Question:**  
 How long do you want to play for?
 
-Suggested choices:
+Choices:
 
-- 15 minutes or less
-- 15–30 minutes
-- 30–60 minutes
-- 1–2 hours
-- 2+ hours
+- Up to 20 minutes
+- About 30 minutes
+- About 45–60 minutes
+- About 1–2 hours
+- More than 2 hours
 - No preference
 
 **Helper text:**
@@ -115,7 +115,7 @@ Broad ranges are preferable to requiring an exact number because casual users of
 **Question:**  
 How involved do you want the game to feel?
 
-Suggested choices:
+Choices:
 
 - **Light and easy** — quick to learn, simple decisions
 - **Some strategy** — easy enough to learn, but gives you things to think about
@@ -136,16 +136,20 @@ BoardGameGeek terminology such as **weight** should not be exposed directly to t
 **Question:**  
 What kind of experience are you in the mood for?
 
-Users may select up to two:
+Users may select one or two:
 
-- **Social & lively** — lots of talking, laughing or interaction
 - **Relaxed & easy-going** — enjoyable without feeling intense
+- **Social & lively** — lots of talking, laughing or interaction
 - **Competitive** — you want to challenge each other and try to win
-- **Strategic & thoughtful** — you want interesting decisions and planning
 - **Cooperative** — you want to work together toward a shared goal
+- **Strategic & thoughtful** — you want interesting decisions and planning
 - **Immersive & thematic** — you want to get drawn into a setting, story or theme
 - **Funny, silly & chaotic** — you mainly want to laugh and not take the game too seriously
 - **No preference**
+
+If **No preference** is selected, it must be the only selection. Selecting another mood removes **No preference**.
+
+Allowing up to two choices gives users room to describe combinations such as social and competitive or strategic and immersive without making the recommendation signal too broad.
 
 This question describes how the game should **feel to play**, rather than the specific actions or mechanics involved.
 
@@ -156,17 +160,21 @@ This question describes how the game should **feel to play**, rather than the sp
 **Question:**  
 What sounds fun to you?
 
-Users may select up to two:
+Users may select one or two:
 
-- **Collecting & building** — gather cards, resources or pieces to create something
 - **Solving & figuring things out** — puzzles, deduction or working out the best answer
-- **Planning & managing resources** — build, optimise or carefully manage what you have
-- **Bluffing & reading people** — deceive, guess intentions or work out who to trust
-- **Fast reactions & quick decisions** — speed, timing or thinking on your feet
-- **Exploring & storytelling** — discover places, characters or an unfolding story
-- **Direct competition** — block, attack, race or interfere with other players
-- **Words & creativity** — clues, communication, drawing, acting or wordplay
+- **Collecting & building** — gather cards, resources or pieces to create something
+- **Planning & managing** — build, optimise or carefully manage what you have
+- **Talking, guessing & reading people** — communication, clues, deduction or working out other players
+- **Working together** — cooperate toward a shared goal
+- **Competing directly** — block, attack, race or interfere with other players
+- **Theme & story** — explore a setting, characters or an unfolding story
+- **Quick & simple** — easy decisions and fast turns
 - **No preference**
+
+If **No preference** is selected, it must be the only selection. Selecting another style removes **No preference**.
+
+Allowing up to two choices lets a user express combinations such as collecting and building plus planning and managing while keeping the questionnaire focused.
 
 These options deliberately translate technical board-game mechanics into plain language.
 
@@ -186,43 +194,26 @@ For example, an adult comedy game may use familiar word or party-game mechanics 
 
 ---
 
-## Q6 — Age Range and Content Suitability
+## Q6 — Age and Content Suitability
 
 **Question:**  
-How old are the people playing?
+Who will be playing?
 
-Users can choose one of the following approaches.
+The user enters the exact age of the youngest player.
 
-### Everyone is around the same age
+**Age prompt:**  
+How old is the youngest person playing?
 
-Enter:
-
-- Age
-
-### There's a mix of ages
-
-Enter:
-
-- Youngest age
-- Oldest age
-
-### Age isn't important to me
-
-The recommender must distinguish between two concepts:
-
-1. **Age eligibility** — whether someone is realistically old enough to understand and play a game.
-2. **Audience fit** — whether the game is likely to be enjoyable for the actual group.
-
-For example, a game may work very well for a mixed group aged 10–70 but be a weaker recommendation for a group made entirely of 10-year-olds, even if the rules are technically suitable for them.
+The youngest age is required because Version 1 uses the publisher minimum age as an eligibility check. The MVP does not require the oldest player's age and does not offer an age-based **No preference** option.
 
 ### Content Preference
 
-Within the same step, users may optionally specify:
+Within the same step, users select one content preference.
 
 **What kind of content is okay for your group?**
 
 - Family-friendly only
-- Mature/adult humour is okay
+- Mature or adult humour is okay
 - No preference
 
 Content preference is separate from age suitability.
@@ -240,11 +231,11 @@ Example:
 | Preference | Selection |
 | --- | --- |
 | Players | 4 people |
-| Play time | 30–60 minutes |
+| Play time | About 45–60 minutes |
 | Complexity | Some strategy |
 | Experience | Social & lively; Funny, silly & chaotic |
-| Play style | Words & creativity; Bluffing & reading people |
-| Ages | 10–70 |
+| Play style | Talking, guessing & reading people; Quick & simple |
+| Youngest player | 10 |
 | Content | Family-friendly only |
 
 Each answer should include a **Change** action.
@@ -297,7 +288,7 @@ Each card should include a short **Why it fits you** section.
 Example:
 
 - Works well with 4 players
-- Fits your 30–60 minute preference
+- Fits your 45–60 minute preference
 - Matches your preference for social and funny games
 
 Each recommendation should also include a **Good to know** point.
@@ -327,7 +318,7 @@ A short plain-English explanation should then explain why the game ranked highly
 
 For example:
 
-> This game ranked highly because it works particularly well with four players, fits comfortably within your available time, and strongly matches the social and competitive experience you selected.
+> This game ranked highly because it works particularly well with four players, fits comfortably within your available time, and strongly matches the social and competitive experiences you selected.
 
 The explanation should make the recommender transparent without unnecessarily exposing technical scoring details.
 
@@ -439,6 +430,8 @@ The wireframe illustrates:
 - loading state
 - no-match state
 - external-data error state
+
+The wireframe remains a low-fidelity layout reference. Where it differs from the interaction rules documented here, this document and the current API contract define the intended MVP behaviour.
 
 ---
 
