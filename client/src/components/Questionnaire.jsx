@@ -100,21 +100,16 @@ const contentOptions = [
   },
 ]
 
-function Questionnaire({ onBackToStart }) {
-  const [currentStep, setCurrentStep] = useState(1)
-
-  const [answers, setAnswers] = useState({
-    players: '',
-    time: '',
-    complexity: '',
-    mood: [],
-    style: [],
-    youngestPlayerAge: '',
-    contentPreference: '',
-  })
-
+function Questionnaire({
+  answers,
+  setAnswers,
+  currentStep,
+  setCurrentStep,
+  onBackToStart,
+  onReview,
+  isEditingReviewAnswer,
+}) {
   const [error, setError] = useState('')
-  const [completeMessage, setCompleteMessage] = useState('')
   const questionHeadingRef = useRef(null)
 
   useEffect(() => {
@@ -128,7 +123,6 @@ function Questionnaire({ onBackToStart }) {
     }))
 
     setError('')
-    setCompleteMessage('')
   }
 
   function toggleMultiChoice(field, value) {
@@ -167,11 +161,13 @@ function Questionnaire({ onBackToStart }) {
   }
 
   function handlePlayerInput(event) {
-    updateAnswer('players', event.target.value)
+    const value = event.target.value.replace(/\D/g, '')
+    updateAnswer('players', value)
   }
 
   function handleAgeInput(event) {
-    updateAnswer('youngestPlayerAge', event.target.value)
+    const value = event.target.value.replace(/\D/g, '')
+    updateAnswer('youngestPlayerAge', value)
   }
 
   function validateCurrentStep() {
@@ -243,12 +239,12 @@ function Questionnaire({ onBackToStart }) {
 
       setAnswers(completedAnswers)
 
-      console.log('Completed questionnaire:', completedAnswers)
+      onReview()
+      return
+    }
 
-      setCompleteMessage(
-        'Questionnaire complete. The review screen will be added next.',
-      )
-
+    if (isEditingReviewAnswer) {
+      onReview()
       return
     }
 
@@ -257,7 +253,6 @@ function Questionnaire({ onBackToStart }) {
 
   function handleBack() {
     setError('')
-    setCompleteMessage('')
 
     if (currentStep === 1) {
       onBackToStart()
@@ -283,9 +278,7 @@ function Questionnaire({ onBackToStart }) {
                 name={name}
                 value={option.value}
                 checked={value === option.value}
-                onChange={(event) =>
-                  updateAnswer(name, event.target.value)
-                }
+                onChange={(event) => updateAnswer(name, event.target.value)}
               />
 
               <span>{option.label}</span>
@@ -326,17 +319,11 @@ function Questionnaire({ onBackToStart }) {
   return (
     <main className="app-page">
       <section className="question-card">
-        <p className="question-progress">
-          Question {currentStep} of 6
-        </p>
+        <p className="question-progress">Question {currentStep} of 6</p>
 
         {currentStep === 1 && (
           <>
-            <h1
-              id="question-heading"
-              ref={questionHeadingRef}
-              tabIndex={-1}
-            >
+            <h1 id="question-heading" ref={questionHeadingRef} tabIndex={-1}>
               How many people will be playing?
             </h1>
 
@@ -356,19 +343,15 @@ function Questionnaire({ onBackToStart }) {
               </button>
 
               <label className="player-input-group">
-                <span className="visually-hidden">
-                  Number of players
-                </span>
+                <span className="visually-hidden">Number of players</span>
 
                 <input
-                  type="number"
-                  min="1"
-                  step="1"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={answers.players}
                   onChange={handlePlayerInput}
-                  aria-describedby={
-                    error ? 'question-error' : undefined
-                  }
+                  aria-describedby={error ? 'question-error' : undefined}
                   aria-invalid={error ? 'true' : 'false'}
                 />
               </label>
@@ -387,11 +370,7 @@ function Questionnaire({ onBackToStart }) {
 
         {currentStep === 2 && (
           <>
-            <h1
-              id="question-heading"
-              ref={questionHeadingRef}
-              tabIndex={-1}
-            >
+            <h1 id="question-heading" ref={questionHeadingRef} tabIndex={-1}>
               How long do you want to play for?
             </h1>
 
@@ -410,17 +389,13 @@ function Questionnaire({ onBackToStart }) {
 
         {currentStep === 3 && (
           <>
-            <h1
-              id="question-heading"
-              ref={questionHeadingRef}
-              tabIndex={-1}
-            >
+            <h1 id="question-heading" ref={questionHeadingRef} tabIndex={-1}>
               How involved do you want the game to feel?
             </h1>
 
             <p className="question-helper">
-              Think about how much you want to learn and think during the
-              game — not how experienced you are.
+              Think about how much you want to learn and think during the game —
+              not how experienced you are.
             </p>
 
             {renderChoiceList(
@@ -434,17 +409,13 @@ function Questionnaire({ onBackToStart }) {
 
         {currentStep === 4 && (
           <>
-            <h1
-              id="question-heading"
-              ref={questionHeadingRef}
-              tabIndex={-1}
-            >
+            <h1 id="question-heading" ref={questionHeadingRef} tabIndex={-1}>
               What kind of experience are you in the mood for?
             </h1>
 
             <p className="question-helper">
-              Choose one or two options that best describe how you'd like
-              the game to feel.
+              Choose one or two options that best describe how you'd like the
+              game to feel.
             </p>
 
             {renderMultiChoiceList(
@@ -458,17 +429,13 @@ function Questionnaire({ onBackToStart }) {
 
         {currentStep === 5 && (
           <>
-            <h1
-              id="question-heading"
-              ref={questionHeadingRef}
-              tabIndex={-1}
-            >
+            <h1 id="question-heading" ref={questionHeadingRef} tabIndex={-1}>
               What sounds fun to you?
             </h1>
 
             <p className="question-helper">
-              Choose one or two styles that sound most appealing. You
-              don't need to know any board-game terms.
+              Choose one or two styles that sound most appealing. You don't need
+              to know any board-game terms.
             </p>
 
             {renderMultiChoiceList(
@@ -482,17 +449,13 @@ function Questionnaire({ onBackToStart }) {
 
         {currentStep === 6 && (
           <>
-            <h1
-              id="question-heading"
-              ref={questionHeadingRef}
-              tabIndex={-1}
-            >
+            <h1 id="question-heading" ref={questionHeadingRef} tabIndex={-1}>
               Who will be playing?
             </h1>
 
             <p className="question-helper">
-              We'll use the youngest player's age to avoid recommending
-              games that may not suit everyone in your group.
+              We'll use the youngest player's age to avoid recommending games
+              that may not suit everyone in your group.
             </p>
 
             <div className="age-input-group">
@@ -502,14 +465,12 @@ function Questionnaire({ onBackToStart }) {
 
               <input
                 id="youngest-player-age"
-                type="number"
-                min="0"
-                step="1"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={answers.youngestPlayerAge}
                 onChange={handleAgeInput}
-                aria-describedby={
-                  error ? 'question-error' : undefined
-                }
+                aria-describedby={error ? 'question-error' : undefined}
               />
             </div>
 
@@ -532,12 +493,6 @@ function Questionnaire({ onBackToStart }) {
           </p>
         )}
 
-        {completeMessage && (
-          <p className="question-complete" role="status">
-            {completeMessage}
-          </p>
-        )}
-
         <div className="question-actions">
           <button
             type="button"
@@ -547,11 +502,7 @@ function Questionnaire({ onBackToStart }) {
             Back
           </button>
 
-          <button
-            type="button"
-            className="primary-button"
-            onClick={handleNext}
-          >
+          <button type="button" className="primary-button" onClick={handleNext}>
             {currentStep === 6 ? 'Review answers' : 'Next'}
           </button>
         </div>
