@@ -1,42 +1,42 @@
-import { useState } from "react";
-import "./App.css";
-import LandingScreen from "./components/LandingScreen";
-import Questionnaire from "./components/Questionnaire";
-import ReviewScreen from "./components/ReviewScreen";
+import { useState } from 'react'
+import './App.css'
+import LandingScreen from './components/LandingScreen'
+import Questionnaire from './components/Questionnaire'
+import ReviewScreen from './components/ReviewScreen'
 
 const initialAnswers = {
-  players: "",
-  time: "",
-  complexity: "",
+  players: '',
+  time: '',
+  complexity: '',
   mood: [],
   style: [],
-  youngestPlayerAge: "",
-  contentPreference: "",
-};
+  youngestPlayerAge: '',
+  contentPreference: '',
+}
 
 function App() {
-  const [isEditingReviewAnswer, setIsEditingReviewAnswer] = useState(false);
-  const [screen, setScreen] = useState("landing");
-  const [currentStep, setCurrentStep] = useState(1);
-  const [answers, setAnswers] = useState(initialAnswers);
-  const [recommendationResponse, setRecommendationResponse] = useState(null);
-  const [submissionError, setSubmissionError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEditingReviewAnswer, setIsEditingReviewAnswer] = useState(false)
+  const [screen, setScreen] = useState('landing')
+  const [currentStep, setCurrentStep] = useState(1)
+  const [answers, setAnswers] = useState(initialAnswers)
+  const [recommendationResponse, setRecommendationResponse] = useState(null)
+  const [submissionError, setSubmissionError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   function editAnswer(step) {
-    setSubmissionError("");
-    setIsEditingReviewAnswer(true);
-    setCurrentStep(step);
-    setScreen("questionnaire");
+    setSubmissionError('')
+    setIsEditingReviewAnswer(true)
+    setCurrentStep(step)
+    setScreen('questionnaire')
   }
 
   async function submitQuestionnaire() {
     if (isSubmitting) {
-      return;
+      return
     }
 
-    setIsSubmitting(true);
-    setSubmissionError("");
+    setIsSubmitting(true)
+    setSubmissionError('')
 
     const requestBody = {
       players: Number(answers.players),
@@ -46,68 +46,66 @@ function App() {
       style: answers.style,
       youngestPlayerAge: Number(answers.youngestPlayerAge),
       contentPreference: answers.contentPreference,
-    };
+    }
 
     try {
-      const response = await fetch("/api/recommendations", {
-        method: "POST",
+      const response = await fetch('/api/recommendations', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
-      });
+      })
 
       if (!response.ok) {
-        throw new Error("Recommendation request failed.");
+        throw new Error('Recommendation request failed.')
       }
 
-      const data = await response.json();
+      const data = await response.json()
 
-      setRecommendationResponse(data);
-      setScreen("results");
+      setRecommendationResponse(data)
+      setScreen('results')
     } catch (error) {
-      console.error(error);
+      console.error(error)
 
       setSubmissionError(
-        "We could not get your recommendations. Your answers have been kept, so you can try again.",
-      );
+        'We could not get your recommendations. Your answers have been kept, so you can try again.',
+      )
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
   }
 
   function startQuestionnaire() {
-    setScreen("questionnaire");
+    setIsEditingReviewAnswer(false)
+    setScreen('questionnaire')
   }
 
   function returnToLanding() {
-    setScreen("landing");
+    setIsEditingReviewAnswer(false)
+    setScreen('landing')
   }
 
   function showReview() {
-    setIsEditingReviewAnswer(false);
-    setScreen("review");
+    setIsEditingReviewAnswer(false)
+    setScreen('review')
   }
 
   function startOver() {
-    setAnswers(initialAnswers);
-    setCurrentStep(1);
-    setRecommendationResponse(null);
-    setSubmissionError("");
-    setIsSubmitting(false);
-    setIsEditingReviewAnswer(false);
-    setScreen("landing");
+    setAnswers(initialAnswers)
+    setCurrentStep(1)
+    setRecommendationResponse(null)
+    setSubmissionError('')
+    setIsSubmitting(false)
+    setIsEditingReviewAnswer(false)
+    setScreen('landing')
   }
 
-  if (screen === "landing") {
-    return <LandingScreen onStart={startQuestionnaire} />;
+  if (screen === 'landing') {
+    return <LandingScreen onStart={startQuestionnaire} />
   }
 
-  if (screen === "landing") {
-    return <LandingScreen onStart={startQuestionnaire} />;
-  }
-
-  if (screen === "questionnaire") {
+  if (screen === 'questionnaire') {
     return (
       <Questionnaire
         answers={answers}
@@ -118,10 +116,10 @@ function App() {
         onReview={showReview}
         isEditingReviewAnswer={isEditingReviewAnswer}
       />
-    );
+    )
   }
 
-  if (screen === "review") {
+  if (screen === 'review') {
     return (
       <ReviewScreen
         answers={answers}
@@ -131,27 +129,27 @@ function App() {
         isSubmitting={isSubmitting}
         submissionError={submissionError}
       />
-    );
+    )
   }
 
-  if (screen === "results") {
+  if (screen === 'results') {
     return (
       <main className="app-page">
         <section className="review-card">
           <h1>Recommendations received</h1>
 
           <p>
-            The backend returned{" "}
+            The backend returned{' '}
             {recommendationResponse?.recommendationCount ?? 0} recommendations.
           </p>
 
           <p>The full results screen will be added next.</p>
         </section>
       </main>
-    );
+    )
   }
 
-  return null;
+  return null
 }
 
-export default App;
+export default App
