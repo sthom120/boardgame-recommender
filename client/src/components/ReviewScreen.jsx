@@ -44,7 +44,13 @@ const contentLabels = {
   'no-preference': 'No preference',
 }
 
-function ReviewScreen({ answers, onEdit }) {
+function ReviewScreen({
+  answers,
+  onEdit,
+  onSubmit,
+  isSubmitting,
+  submissionError,
+}) {
   const reviewItems = [
     {
       label: 'Players',
@@ -114,13 +120,27 @@ function ReviewScreen({ answers, onEdit }) {
           ))}
         </dl>
 
+{isSubmitting && (
+  <p className="submission-status" role="status" aria-live="polite">
+    Finding games that fit your group…
+  </p>
+)}
+
+{submissionError && (
+  <p className="form-error" role="alert">
+    {submissionError}
+  </p>
+)}
+
         <div className="question-actions">
           <button
-            type="button"
-            className="primary-button"
-          >
-            Find my games
-          </button>
+  type="button"
+  className="primary-button"
+  onClick={onSubmit}
+  disabled={isSubmitting}
+>
+  {isSubmitting ? 'Finding games…' : 'Find my games'}
+</button>
         </div>
       </section>
     </main>
