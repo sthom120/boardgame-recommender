@@ -1,104 +1,104 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from "react";
 
 const timeOptions = [
-  { value: 'up-to-20', label: 'Up to 20 minutes' },
-  { value: 'up-to-30', label: 'About 30 minutes' },
-  { value: 'up-to-60', label: 'About 45–60 minutes' },
-  { value: 'up-to-120', label: 'About 1–2 hours' },
-  { value: 'over-120', label: 'More than 2 hours' },
-  { value: 'no-preference', label: 'No preference' },
-]
+  { value: "up-to-20", label: "Up to 20 minutes" },
+  { value: "up-to-30", label: "About 30 minutes" },
+  { value: "up-to-60", label: "About 45–60 minutes" },
+  { value: "up-to-120", label: "About 1–2 hours" },
+  { value: "over-120", label: "More than 2 hours" },
+  { value: "no-preference", label: "No preference" },
+];
 
 const complexityOptions = [
   {
-    value: 'light',
-    label: 'Light and easy — quick to learn, with simple decisions',
+    value: "light",
+    label: "Light and easy — quick to learn, with simple decisions",
   },
   {
-    value: 'some-strategy',
+    value: "some-strategy",
     label:
-      'Some strategy — easy to learn, but still gives you things to think about',
+      "Some strategy — easy to learn, but still gives you things to think about",
   },
   {
-    value: 'moderate',
+    value: "moderate",
     label:
-      'Moderately challenging — more rules, planning and meaningful decisions',
+      "Moderately challenging — more rules, planning and meaningful decisions",
   },
   {
-    value: 'deep',
+    value: "deep",
     label:
-      'Deep and challenging — lots to think about, with more rules and strategy',
+      "Deep and challenging — lots to think about, with more rules and strategy",
   },
   {
-    value: 'no-preference',
-    label: 'Not sure / no preference',
+    value: "no-preference",
+    label: "Not sure / no preference",
   },
-]
+];
 
 const moodOptions = [
-  { value: 'relaxed', label: 'Relaxed & easy-going' },
-  { value: 'social', label: 'Social & lively' },
-  { value: 'competitive', label: 'Competitive' },
-  { value: 'cooperative', label: 'Cooperative' },
-  { value: 'strategic', label: 'Strategic & thoughtful' },
-  { value: 'immersive', label: 'Immersive & thematic' },
-  { value: 'chaotic', label: 'Funny, silly & chaotic' },
-  { value: 'no-preference', label: 'No preference' },
-]
+  { value: "relaxed", label: "Relaxed & easy-going" },
+  { value: "social", label: "Social & lively" },
+  { value: "competitive", label: "Competitive" },
+  { value: "cooperative", label: "Cooperative" },
+  { value: "strategic", label: "Strategic & thoughtful" },
+  { value: "immersive", label: "Immersive & thematic" },
+  { value: "chaotic", label: "Funny, silly & chaotic" },
+  { value: "no-preference", label: "No preference" },
+];
 
 const styleOptions = [
   {
-    value: 'working-things-out',
-    label: 'Solving & figuring things out',
+    value: "working-things-out",
+    label: "Solving & figuring things out",
   },
   {
-    value: 'building-collecting',
-    label: 'Collecting & building',
+    value: "building-collecting",
+    label: "Collecting & building",
   },
   {
-    value: 'planning-managing',
-    label: 'Planning & managing',
+    value: "planning-managing",
+    label: "Planning & managing",
   },
   {
-    value: 'talking-guessing',
-    label: 'Talking, guessing & reading people',
+    value: "talking-guessing",
+    label: "Talking, guessing & reading people",
   },
   {
-    value: 'working-together',
-    label: 'Working together',
+    value: "working-together",
+    label: "Working together",
   },
   {
-    value: 'competing-directly',
-    label: 'Competing directly',
+    value: "competing-directly",
+    label: "Competing directly",
   },
   {
-    value: 'theme-story',
-    label: 'Theme & story',
+    value: "theme-story",
+    label: "Theme & story",
   },
   {
-    value: 'quick-simple',
-    label: 'Quick & simple',
+    value: "quick-simple",
+    label: "Quick & simple",
   },
   {
-    value: 'no-preference',
-    label: 'No preference',
+    value: "no-preference",
+    label: "No preference",
   },
-]
+];
 
 const contentOptions = [
   {
-    value: 'family-friendly',
-    label: 'Family-friendly only',
+    value: "family-friendly",
+    label: "Family-friendly only",
   },
   {
-    value: 'mature-okay',
-    label: 'Mature or adult humour is okay',
+    value: "mature-okay",
+    label: "Mature or adult humour is okay",
   },
   {
-    value: 'no-preference',
-    label: 'No preference',
+    value: "no-preference",
+    label: "No preference",
   },
-]
+];
 
 function Questionnaire({
   answers,
@@ -107,166 +107,166 @@ function Questionnaire({
   setCurrentStep,
   onBackToStart,
   onReview,
+  isEditingReviewAnswer,
 }) {
-
-  const [error, setError] = useState('')
-  const [completeMessage, setCompleteMessage] = useState('')
-  const questionHeadingRef = useRef(null)
+  const [error, setError] = useState("");
+  const questionHeadingRef = useRef(null);
 
   useEffect(() => {
-    questionHeadingRef.current?.focus()
-  }, [currentStep])
+    questionHeadingRef.current?.focus();
+  }, [currentStep]);
 
   function updateAnswer(field, value) {
     setAnswers((previousAnswers) => ({
       ...previousAnswers,
       [field]: value,
-    }))
+    }));
 
-    setError('')
-    setCompleteMessage('')
+    setError("");
   }
 
   function toggleMultiChoice(field, value) {
-    const currentValues = answers[field]
+    const currentValues = answers[field];
 
-    if (value === 'no-preference') {
-      updateAnswer(field, ['no-preference'])
-      return
+    if (value === "no-preference") {
+      updateAnswer(field, ["no-preference"]);
+      return;
     }
 
     if (currentValues.includes(value)) {
       updateAnswer(
         field,
         currentValues.filter((selectedValue) => selectedValue !== value),
-      )
-      return
+      );
+      return;
     }
 
     const withoutNoPreference = currentValues.filter(
-      (selectedValue) => selectedValue !== 'no-preference',
-    )
+      (selectedValue) => selectedValue !== "no-preference",
+    );
 
     if (withoutNoPreference.length >= 2) {
-      setError('Choose up to two options.')
-      return
+      setError("Choose up to two options.");
+      return;
     }
 
-    updateAnswer(field, [...withoutNoPreference, value])
+    updateAnswer(field, [...withoutNoPreference, value]);
   }
 
   function changePlayers(amount) {
-    const currentValue = Number(answers.players) || 0
-    const nextValue = Math.max(1, currentValue + amount)
+    const currentValue = Number(answers.players) || 0;
+    const nextValue = Math.max(1, currentValue + amount);
 
-    updateAnswer('players', nextValue)
+    updateAnswer("players", nextValue);
   }
 
   function handlePlayerInput(event) {
-    const value = event.target.value.replace(/\D/g, '')
-    updateAnswer('players', value)
+    const value = event.target.value.replace(/\D/g, "");
+    updateAnswer("players", value);
   }
 
   function handleAgeInput(event) {
-    const value = event.target.value.replace(/\D/g, '')
-    updateAnswer('youngestPlayerAge', value)
+    const value = event.target.value.replace(/\D/g, "");
+    updateAnswer("youngestPlayerAge", value);
   }
 
   function validateCurrentStep() {
     if (currentStep === 1) {
-      const playerCount = Number(answers.players)
+      const playerCount = Number(answers.players);
 
       if (!Number.isInteger(playerCount) || playerCount < 1) {
-        return 'Enter the number of people who will be playing.'
+        return "Enter the number of people who will be playing.";
       }
     }
 
     if (currentStep === 2 && !answers.time) {
-      return 'Choose how long you would like to play for.'
+      return "Choose how long you would like to play for.";
     }
 
     if (currentStep === 3 && !answers.complexity) {
-      return 'Choose how involved you would like the game to feel.'
+      return "Choose how involved you would like the game to feel.";
     }
 
     if (currentStep === 4 && answers.mood.length === 0) {
-      return 'Choose at least one kind of experience.'
+      return "Choose at least one kind of experience.";
     }
 
     if (currentStep === 5 && answers.style.length === 0) {
-      return 'Choose at least one style of play.'
+      return "Choose at least one style of play.";
     }
 
     if (currentStep === 6) {
-      const youngestAge = Number(answers.youngestPlayerAge)
+      const youngestAge = Number(answers.youngestPlayerAge);
 
       if (
-        answers.youngestPlayerAge === '' ||
+        answers.youngestPlayerAge === "" ||
         !Number.isInteger(youngestAge) ||
         youngestAge < 0
       ) {
-        return 'Enter the age of the youngest person who will be playing.'
+        return "Enter the age of the youngest person who will be playing.";
       }
 
       if (!answers.contentPreference) {
-        return 'Choose the type of content that is okay for your group.'
+        return "Choose the type of content that is okay for your group.";
       }
     }
 
-    return ''
+    return "";
   }
 
   function handleNext() {
-    const validationError = validateCurrentStep()
+    const validationError = validateCurrentStep();
 
     if (validationError) {
-      setError(validationError)
-      return
+      setError(validationError);
+      return;
     }
 
-    setError('')
+    setError("");
 
     if (currentStep === 1) {
       setAnswers((previousAnswers) => ({
         ...previousAnswers,
         players: Number(previousAnswers.players),
-      }))
+      }));
     }
 
     if (currentStep === 6) {
       const completedAnswers = {
         ...answers,
         youngestPlayerAge: Number(answers.youngestPlayerAge),
-      }
+      };
 
-      setAnswers(completedAnswers)
+      setAnswers(completedAnswers);
 
-      console.log('Completed questionnaire:', completedAnswers)
-
-      onReview()
-      return
+      onReview();
+      return;
     }
 
-    setCurrentStep((step) => step + 1)
+    if (isEditingReviewAnswer) {
+      onReview();
+      return;
+    }
+
+    setCurrentStep((step) => step + 1);
   }
 
   function handleBack() {
-    setError('')
-    setCompleteMessage('')
+    setError("");
 
     if (currentStep === 1) {
-      onBackToStart()
-      return
+      onBackToStart();
+      return;
     }
 
-    setCurrentStep((step) => step - 1)
+    setCurrentStep((step) => step - 1);
   }
 
   function renderChoiceList(name, value, options, legend) {
     return (
       <fieldset
         className="choice-fieldset"
-        aria-describedby={error ? 'question-error' : undefined}
+        aria-describedby={error ? "question-error" : undefined}
       >
         <legend className="visually-hidden">{legend}</legend>
 
@@ -278,9 +278,7 @@ function Questionnaire({
                 name={name}
                 value={option.value}
                 checked={value === option.value}
-                onChange={(event) =>
-                  updateAnswer(name, event.target.value)
-                }
+                onChange={(event) => updateAnswer(name, event.target.value)}
               />
 
               <span>{option.label}</span>
@@ -288,14 +286,14 @@ function Questionnaire({
           ))}
         </div>
       </fieldset>
-    )
+    );
   }
 
   function renderMultiChoiceList(name, values, options, legend) {
     return (
       <fieldset
         className="choice-fieldset"
-        aria-describedby={error ? 'question-error' : undefined}
+        aria-describedby={error ? "question-error" : undefined}
       >
         <legend className="visually-hidden">{legend}</legend>
 
@@ -315,23 +313,17 @@ function Questionnaire({
           ))}
         </div>
       </fieldset>
-    )
+    );
   }
 
   return (
     <main className="app-page">
       <section className="question-card">
-        <p className="question-progress">
-          Question {currentStep} of 6
-        </p>
+        <p className="question-progress">Question {currentStep} of 6</p>
 
         {currentStep === 1 && (
           <>
-            <h1
-              id="question-heading"
-              ref={questionHeadingRef}
-              tabIndex={-1}
-            >
+            <h1 id="question-heading" ref={questionHeadingRef} tabIndex={-1}>
               How many people will be playing?
             </h1>
 
@@ -351,9 +343,7 @@ function Questionnaire({
               </button>
 
               <label className="player-input-group">
-                <span className="visually-hidden">
-                  Number of players
-                </span>
+                <span className="visually-hidden">Number of players</span>
 
                 <input
                   type="text"
@@ -361,10 +351,8 @@ function Questionnaire({
                   pattern="[0-9]*"
                   value={answers.players}
                   onChange={handlePlayerInput}
-                  aria-describedby={
-                    error ? 'question-error' : undefined
-                  }
-                  aria-invalid={error ? 'true' : 'false'}
+                  aria-describedby={error ? "question-error" : undefined}
+                  aria-invalid={error ? "true" : "false"}
                 />
               </label>
 
@@ -382,11 +370,7 @@ function Questionnaire({
 
         {currentStep === 2 && (
           <>
-            <h1
-              id="question-heading"
-              ref={questionHeadingRef}
-              tabIndex={-1}
-            >
+            <h1 id="question-heading" ref={questionHeadingRef} tabIndex={-1}>
               How long do you want to play for?
             </h1>
 
@@ -395,99 +379,83 @@ function Questionnaire({
             </p>
 
             {renderChoiceList(
-              'time',
+              "time",
               answers.time,
               timeOptions,
-              'Available play time',
+              "Available play time",
             )}
           </>
         )}
 
         {currentStep === 3 && (
           <>
-            <h1
-              id="question-heading"
-              ref={questionHeadingRef}
-              tabIndex={-1}
-            >
+            <h1 id="question-heading" ref={questionHeadingRef} tabIndex={-1}>
               How involved do you want the game to feel?
             </h1>
 
             <p className="question-helper">
-              Think about how much you want to learn and think during the
-              game — not how experienced you are.
+              Think about how much you want to learn and think during the game —
+              not how experienced you are.
             </p>
 
             {renderChoiceList(
-              'complexity',
+              "complexity",
               answers.complexity,
               complexityOptions,
-              'Desired game complexity',
+              "Desired game complexity",
             )}
           </>
         )}
 
         {currentStep === 4 && (
           <>
-            <h1
-              id="question-heading"
-              ref={questionHeadingRef}
-              tabIndex={-1}
-            >
+            <h1 id="question-heading" ref={questionHeadingRef} tabIndex={-1}>
               What kind of experience are you in the mood for?
             </h1>
 
             <p className="question-helper">
-              Choose one or two options that best describe how you'd like
-              the game to feel.
+              Choose one or two options that best describe how you'd like the
+              game to feel.
             </p>
 
             {renderMultiChoiceList(
-              'mood',
+              "mood",
               answers.mood,
               moodOptions,
-              'Desired game experience. Choose up to two.',
+              "Desired game experience. Choose up to two.",
             )}
           </>
         )}
 
         {currentStep === 5 && (
           <>
-            <h1
-              id="question-heading"
-              ref={questionHeadingRef}
-              tabIndex={-1}
-            >
+            <h1 id="question-heading" ref={questionHeadingRef} tabIndex={-1}>
               What sounds fun to you?
             </h1>
 
             <p className="question-helper">
-              Choose one or two styles that sound most appealing. You
-              don't need to know any board-game terms.
+              Choose one or two styles that sound most appealing. You don't need
+              to know any board-game terms.
             </p>
 
             {renderMultiChoiceList(
-              'style',
+              "style",
               answers.style,
               styleOptions,
-              'Preferred play style. Choose up to two.',
+              "Preferred play style. Choose up to two.",
             )}
           </>
         )}
 
         {currentStep === 6 && (
           <>
-            <h1
-              id="question-heading"
-              ref={questionHeadingRef}
-              tabIndex={-1}
-            >
+            <h1 id="question-heading" ref={questionHeadingRef} tabIndex={-1}>
               Who will be playing?
             </h1>
 
             <p className="question-helper">
-              We'll use the youngest player's age to avoid recommending
-              games that may not suit everyone in your group.
+              We'll use the youngest player's age to avoid recommending games
+              that may not suit everyone in your group.
             </p>
 
             <div className="age-input-group">
@@ -502,9 +470,7 @@ function Questionnaire({
                 pattern="[0-9]*"
                 value={answers.youngestPlayerAge}
                 onChange={handleAgeInput}
-                aria-describedby={
-                  error ? 'question-error' : undefined
-                }
+                aria-describedby={error ? "question-error" : undefined}
               />
             </div>
 
@@ -513,10 +479,10 @@ function Questionnaire({
             </h2>
 
             {renderChoiceList(
-              'contentPreference',
+              "contentPreference",
               answers.contentPreference,
               contentOptions,
-              'Content preference',
+              "Content preference",
             )}
           </>
         )}
@@ -524,12 +490,6 @@ function Questionnaire({
         {error && (
           <p id="question-error" className="form-error" role="alert">
             {error}
-          </p>
-        )}
-
-        {completeMessage && (
-          <p className="question-complete" role="status">
-            {completeMessage}
           </p>
         )}
 
@@ -542,17 +502,13 @@ function Questionnaire({
             Back
           </button>
 
-          <button
-            type="button"
-            className="primary-button"
-            onClick={handleNext}
-          >
-            {currentStep === 6 ? 'Review answers' : 'Next'}
+          <button type="button" className="primary-button" onClick={handleNext}>
+            {currentStep === 6 ? "Review answers" : "Next"}
           </button>
         </div>
       </section>
     </main>
-  )
+  );
 }
 
-export default Questionnaire
+export default Questionnaire;

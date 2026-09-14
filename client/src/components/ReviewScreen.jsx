@@ -48,6 +48,7 @@ function ReviewScreen({
   answers,
   onEdit,
   onSubmit,
+  onStartOver,
   isSubmitting,
   submissionError,
 }) {
@@ -133,15 +134,24 @@ function ReviewScreen({
 )}
 
         <div className="question-actions">
-          <button
-  type="button"
-  className="primary-button"
-  onClick={onSubmit}
-  disabled={isSubmitting}
->
-  {isSubmitting ? 'Finding games…' : 'Find my games'}
-</button>
-        </div>
+  <button
+    type="button"
+    className="secondary-button"
+    onClick={onStartOver}
+    disabled={isSubmitting}
+  >
+    Start over
+  </button>
+
+  <button
+    type="button"
+    className="primary-button"
+    onClick={onSubmit}
+    disabled={isSubmitting}
+  >
+    {isSubmitting ? 'Finding games…' : 'Find my games'}
+  </button>
+</div>
       </section>
     </main>
   )
