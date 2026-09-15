@@ -1,9 +1,18 @@
+// -----------------------------------------------------------------------------
+// Time configuration
+// -----------------------------------------------------------------------------
+
 const TIME_BUDGETS = {
   'up-to-20': 20,
   'up-to-30': 30,
   'up-to-60': 60,
   'up-to-120': 120,
 }
+
+
+// -----------------------------------------------------------------------------
+// Player-count suitability scoring
+// -----------------------------------------------------------------------------
 
 function scorePlayerCountSuitability(game, players) {
   const playerCountPoll = game?.playerCountPoll
@@ -46,6 +55,11 @@ function scorePlayerCountSuitability(game, players) {
   return confidence * rawScore + (1 - confidence) * 0.5
 }
 
+
+// -----------------------------------------------------------------------------
+// Play-time scoring
+// -----------------------------------------------------------------------------
+
 function scorePlayTime(game, timePreference) {
   if (timePreference === 'no-preference') {
     return null
@@ -75,6 +89,11 @@ function scorePlayTime(game, timePreference) {
 
   return 0
 }
+
+
+// -----------------------------------------------------------------------------
+// Complexity scoring
+// -----------------------------------------------------------------------------
 
 function scoreComplexity(game, complexityPreference) {
   if (complexityPreference === 'no-preference') {
@@ -143,6 +162,11 @@ function scoreComplexity(game, complexityPreference) {
 
   return 0
 }
+
+
+// -----------------------------------------------------------------------------
+// Mood scoring configuration
+// -----------------------------------------------------------------------------
 
 const HIGH_CONFLICT_MECHANICS = [
   'Take That',
@@ -262,9 +286,19 @@ const MOOD_SIGNALS = {
   },
 }
 
+
+// -----------------------------------------------------------------------------
+// Shared scoring helpers
+// -----------------------------------------------------------------------------
+
 function hasAnySignal(values, signals = []) {
   return signals.some((signal) => values.includes(signal))
 }
+
+
+// -----------------------------------------------------------------------------
+// Individual mood scoring
+// -----------------------------------------------------------------------------
 
 function scoreSingleMood(game, mood) {
   const mechanics = Array.isArray(game?.mechanics)
@@ -335,6 +369,11 @@ function scoreSingleMood(game, mood) {
   return 0
 }
 
+
+// -----------------------------------------------------------------------------
+// Combined mood scoring
+// -----------------------------------------------------------------------------
+
 function scoreMood(game, moodPreferences) {
   if (
     !Array.isArray(moodPreferences) ||
@@ -353,7 +392,13 @@ function scoreMood(game, moodPreferences) {
   return total / scores.length
 }
 
+
+// -----------------------------------------------------------------------------
+// Hard eligibility checks
+// -----------------------------------------------------------------------------
+
 function checkEligibility(game, answers) {
+  // Expansion eligibility
   if (game?.relationships?.baseGameIds?.length > 0) {
     return {
       eligible: false,
@@ -361,6 +406,7 @@ function checkEligibility(game, answers) {
     }
   }
 
+  // Player-count eligibility
   const minPlayers = game?.playerRange?.min
   const maxPlayers = game?.playerRange?.max
 
@@ -378,6 +424,7 @@ function checkEligibility(game, answers) {
     }
   }
 
+  // Age eligibility
   const publisherMinimumAge = game?.age?.publisherMinimum
 
   if (typeof publisherMinimumAge !== 'number') {
@@ -394,6 +441,7 @@ function checkEligibility(game, answers) {
     }
   }
 
+  // Content eligibility
   if (answers.contentPreference === 'family-friendly') {
     const contentClassification = game?.content?.classification
 
@@ -405,6 +453,7 @@ function checkEligibility(game, answers) {
     }
   }
 
+  // Play-time eligibility
   const timeBudget = TIME_BUDGETS[answers.time]
 
   if (typeof timeBudget === 'number') {
@@ -432,6 +481,11 @@ function checkEligibility(game, answers) {
     reason: null,
   }
 }
+
+
+// -----------------------------------------------------------------------------
+// Module exports
+// -----------------------------------------------------------------------------
 
 module.exports = {
   checkEligibility,
