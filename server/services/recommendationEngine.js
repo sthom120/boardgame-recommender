@@ -39,6 +39,28 @@ const COMPLEXITY_STRONG_RANGES = {
   },
 }
 
+
+const MOOD_LABELS = {
+  relaxed: 'relaxed',
+  social: 'social and lively',
+  competitive: 'competitive',
+  cooperative: 'cooperative',
+  strategic: 'strategic',
+  immersive: 'immersive',
+  chaotic: 'chaotic and funny',
+}
+
+const STYLE_LABELS = {
+  'working-things-out': 'working things out',
+  'building-collecting': 'building and collecting',
+  'planning-managing': 'planning and managing',
+  'talking-guessing': 'talking and guessing',
+  'working-together': 'working together',
+  'competing-directly': 'competing directly',
+  'theme-story': 'exploring a theme or story',
+  'quick-simple': 'something quick and simple',
+}
+
 // -----------------------------------------------------------------------------
 // Player-count suitability scoring
 // -----------------------------------------------------------------------------
@@ -890,6 +912,177 @@ function generateCaveats(
   return caveats
 }
 
+// -----------------------------------------------------------------------------
+// Recommendation explanations
+// -----------------------------------------------------------------------------
+
+const EXPLANATION_FACTOR_ORDER = [
+  'playerCount',
+  'time',
+  'complexity',
+  'mood',
+  'style',
+]
+
+function getSupportedMoodLabels(game, moodPreferences) {
+  if (!Array.isArray(moodPreferences)) {
+    return []
+  }
+
+  return moodPreferences
+    .filter((mood) => mood !== 'no-preference')
+    .filter((mood) => scoreSingleMood(game, mood) >= 0.5)
+    .map((mood) => MOOD_LABELS[mood])
+    .filter(Boolean)
+}
+
+function getSupportedStyleLabels(game, stylePreferences) {
+  if (!Array.isArray(stylePreferences)) {
+    return []
+  }
+
+  return stylePreferences
+    .filter((style) => style !== 'no-preference')
+    .filter((style) => scoreSingleStyle(game, style) >= 0.5)
+    .map((style) => STYLE_LABELS[style])
+    .filter(Boolean)
+}
+
+function joinPreferenceLabels(labels) {
+  if (labels.length === 1) {
+    return labels[0]
+  }
+
+  if (labels.length === 2) {
+    return `${labels[0]} and ${labels[1]}`
+  }
+
+  return labels.join(', ')
+}
+
+function buildExplanationReason(
+  factor,
+  game,
+  answers,
+  componentScores,
+) {
+  const score = componentScores[factor]
+
+  if (factor === 'playerCount') {
+    if (score >= 0.75) {
+      return `A strong fit for ${answers.players} players.`
+    }
+
+    return `Supports your group of ${answers.players} players.`
+  }
+
+  if (factor === 'time') {
+    if (answers.time === 'over-120') {
+      return 'Fits your preference for longer games.'
+    }
+
+    const timeBudget = TIME_BUDGETS[answers.time]
+
+    if (typeof timeBudget !== 'number') {
+      return null
+    }
+
+    if (score === 1) {
+      return `Fits comfortably within your ${timeBudget}-minute limit.`
+    }
+
+    return `Stays close to your ${timeBudget}-minute limit.`
+  }
+
+  if (factor === 'complexity') {
+    if (score === 1) {
+      return 'Matches the complexity level you selected.'
+    }
+
+    return 'Is close to the complexity level you selected.'
+  }
+
+  if (factor === 'mood') {
+    const labels = getSupportedMoodLabels(
+      game,
+      answers.mood,
+    )
+
+    if (labels.length === 0) {
+      return null
+    }
+
+    const labelText = joinPreferenceLabels(labels)
+
+    return `Matches your ${labelText} mood preference${labels.length > 1 ? 's' : ''}.`
+  }
+
+  if (factor === 'style') {
+    const labels = getSupportedStyleLabels(
+      game,
+      answers.style,
+    )
+
+    if (labels.length === 0) {
+      return null
+    }
+
+    const labelText = joinPreferenceLabels(labels)
+
+    return `Matches the ${labelText} style you selected.`
+  }
+
+  return null
+}
+
+function generateMatchReasons(
+  game,
+  answers,
+  componentScores,
+) {
+  const rankedFactors = EXPLANATION_FACTOR_ORDER
+    .map((factor, priority) => ({
+      factor,
+      priority,
+      score: componentScores?.[factor],
+      contribution:
+        componentScores?.[factor] *
+        FACTOR_WEIGHTS[factor],
+    }))
+    .filter(
+      ({ score }) =>
+        Number.isFinite(score) &&
+        score >= 0.5,
+    )
+    .sort((first, second) => {
+      if (first.contribution !== second.contribution) {
+        return second.contribution - first.contribution
+      }
+
+      return first.priority - second.priority
+    })
+
+  const reasons = []
+
+  for (const { factor } of rankedFactors) {
+    const reason = buildExplanationReason(
+      factor,
+      game,
+      answers,
+      componentScores,
+    )
+
+    if (reason) {
+      reasons.push(reason)
+    }
+
+    if (reasons.length === 2) {
+      break
+    }
+  }
+
+  return reasons
+}
 
 // -----------------------------------------------------------------------------
 // Hard eligibility checks
@@ -995,5 +1188,6 @@ module.exports = {
   calculateWeightedScore,
   getMatchLabel,
   compareRecommendations,
-    generateCaveats,
+  generateCaveats,
+  generateMatchReasons,
 }

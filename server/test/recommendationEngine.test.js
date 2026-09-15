@@ -12,6 +12,7 @@ const {
   getMatchLabel,
   compareRecommendations,
   generateCaveats,
+  generateMatchReasons,
 } = require('../services/recommendationEngine')
 
 test('includes a standalone game that supports the selected player count', () => {
@@ -1378,4 +1379,161 @@ test('does not generate caveats for a game below the display threshold', () => {
   )
 
   assert.deepEqual(caveats, [])
+})
+
+test('uses the two strongest weighted factors as recommendation reasons', () => {
+  const reasons = generateMatchReasons(
+    {},
+    {
+      players: 4,
+      time: 'up-to-60',
+      complexity: 'moderate',
+      mood: ['no-preference'],
+      style: ['no-preference'],
+    },
+    {
+      playerCount: 1,
+      time: 1,
+      complexity: 1,
+      mood: null,
+      style: null,
+    },
+  )
+
+  assert.deepEqual(reasons, [
+    'A strong fit for 4 players.',
+    'Fits comfortably within your 60-minute limit.',
+  ])
+})
+
+test('uses documented factor priority when weighted contributions are equal', () => {
+  const reasons = generateMatchReasons(
+    {},
+    {
+      players: 4,
+      time: 'up-to-60',
+      complexity: 'moderate',
+      mood: ['strategic'],
+      style: ['no-preference'],
+    },
+    {
+      playerCount: 0,
+      time: 1,
+      complexity: 1,
+      mood: 1,
+      style: null,
+    },
+  )
+
+  assert.deepEqual(reasons, [
+    'Fits comfortably within your 60-minute limit.',
+    'Matches the complexity level you selected.',
+  ])
+})
+
+test('uses only one reason when only one factor reaches the explanation threshold', () => {
+  const reasons = generateMatchReasons(
+    {},
+    {
+      players: 3,
+      time: 'up-to-60',
+      complexity: 'moderate',
+      mood: ['no-preference'],
+      style: ['no-preference'],
+    },
+    {
+      playerCount: 0.8,
+      time: 0,
+      complexity: 0,
+      mood: null,
+      style: null,
+    },
+  )
+
+  assert.deepEqual(reasons, [
+    'A strong fit for 3 players.',
+  ])
+})
+
+test('does not use factors below 0.50 as recommendation reasons', () => {
+  const reasons = generateMatchReasons(
+    {},
+    {
+      players: 3,
+      time: 'up-to-60',
+      complexity: 'moderate',
+      mood: ['no-preference'],
+      style: ['no-preference'],
+    },
+    {
+      playerCount: 0.49,
+      time: 0.49,
+      complexity: 0.49,
+      mood: null,
+      style: null,
+    },
+  )
+
+  assert.deepEqual(reasons, [])
+})
+
+test('names only the selected mood that has matching evidence', () => {
+  const game = {
+    mechanics: ['Communication Limits'],
+    categories: [],
+  }
+
+  const reasons = generateMatchReasons(
+    game,
+    {
+      players: 4,
+      time: 'no-preference',
+      complexity: 'no-preference',
+      mood: ['social', 'strategic'],
+      style: ['no-preference'],
+    },
+    {
+      playerCount: 0,
+      time: null,
+      complexity: null,
+      mood: 0.5,
+      style: null,
+    },
+  )
+
+  assert.deepEqual(reasons, [
+    'Matches your social and lively mood preference.',
+  ])
+})
+
+test('names only the selected style that has matching evidence', () => {
+  const game = {
+    mechanics: ['Set Collection'],
+    categories: [],
+  }
+
+  const reasons = generateMatchReasons(
+    game,
+    {
+      players: 4,
+      time: 'no-preference',
+      complexity: 'no-preference',
+      mood: ['no-preference'],
+      style: [
+        'building-collecting',
+        'planning-managing',
+      ],
+    },
+    {
+      playerCount: 0,
+      time: null,
+      complexity: null,
+      mood: null,
+      style: 0.5,
+    },
+  )
+
+  assert.deepEqual(reasons, [
+    'Matches the building and collecting style you selected.',
+  ])
 })
