@@ -4,6 +4,7 @@ const assert = require('node:assert/strict')
 const {
   checkEligibility,
   scorePlayerCountSuitability,
+  scorePlayTime,
 } = require('../services/recommendationEngine')
 
 test('includes a standalone game that supports the selected player count', () => {
@@ -553,4 +554,64 @@ test('supports grouped player-count poll entries such as 5+', () => {
   const score = scorePlayerCountSuitability(game, 6)
 
   assert.equal(score, 0.95)
+})
+
+test('gives a full time score when the game fits within the selected budget', () => {
+  const game = {
+    playTime: {
+      maxMinutes: 45,
+    },
+  }
+
+  assert.equal(scorePlayTime(game, 'up-to-60'), 1)
+})
+
+test('gives a partial time score when the game is up to 10 percent over budget', () => {
+  const game = {
+    playTime: {
+      maxMinutes: 65,
+    },
+  }
+
+  assert.equal(scorePlayTime(game, 'up-to-60'), 0.5)
+})
+
+test('gives no time score when the game is more than 10 percent over budget', () => {
+  const game = {
+    playTime: {
+      maxMinutes: 67,
+    },
+  }
+
+  assert.equal(scorePlayTime(game, 'up-to-60'), 0)
+})
+
+test('gives a full time score when more than 2 hours is selected', () => {
+  const game = {
+    playTime: {
+      maxMinutes: 240,
+    },
+  }
+
+  assert.equal(scorePlayTime(game, 'over-120'), 1)
+})
+
+test('gives a full time score for over-120 even when play-time data is missing', () => {
+  const game = {
+    playTime: {
+      maxMinutes: null,
+    },
+  }
+
+  assert.equal(scorePlayTime(game, 'over-120'), 1)
+})
+
+test('removes time from scoring when there is no time preference', () => {
+  const game = {
+    playTime: {
+      maxMinutes: 90,
+    },
+  }
+
+  assert.equal(scorePlayTime(game, 'no-preference'), null)
 })

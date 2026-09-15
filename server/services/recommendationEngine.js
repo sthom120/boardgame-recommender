@@ -46,6 +46,36 @@ function scorePlayerCountSuitability(game, players) {
   return confidence * rawScore + (1 - confidence) * 0.5
 }
 
+function scorePlayTime(game, timePreference) {
+  if (timePreference === 'no-preference') {
+    return null
+  }
+
+  if (timePreference === 'over-120') {
+    return 1
+  }
+
+  const timeBudget = TIME_BUDGETS[timePreference]
+  const maxMinutes = game?.playTime?.maxMinutes
+
+  if (
+    typeof timeBudget !== 'number' ||
+    typeof maxMinutes !== 'number'
+  ) {
+    return 0
+  }
+
+  if (maxMinutes <= timeBudget) {
+    return 1
+  }
+
+  if (maxMinutes <= timeBudget * 1.1) {
+    return 0.5
+  }
+
+  return 0
+}
+
 function checkEligibility(game, answers) {
   if (game?.relationships?.baseGameIds?.length > 0) {
     return {
@@ -129,4 +159,5 @@ function checkEligibility(game, answers) {
 module.exports = {
   checkEligibility,
   scorePlayerCountSuitability,
+  scorePlayTime,
 }
