@@ -286,6 +286,124 @@ const MOOD_SIGNALS = {
   },
 }
 
+// -----------------------------------------------------------------------------
+// Game-style scoring configuration
+// -----------------------------------------------------------------------------
+
+const STYLE_SIGNALS = {
+  'working-things-out': {
+    primaryMechanics: [
+      'Deduction',
+      'Pattern Recognition',
+      'Pattern Building',
+      'Logic',
+      'Memory',
+    ],
+    secondaryMechanics: [
+      'Hidden Roles',
+      'Secret Unit Deployment',
+      'Questions and Answers',
+    ],
+  },
+
+  'building-collecting': {
+    primaryMechanics: [
+      'Set Collection',
+      'Deck, Bag, and Pool Building',
+      'Deck Construction',
+      'Pattern Building',
+      'Tile Placement',
+    ],
+    secondaryMechanics: [
+      'Open Drafting',
+      'Closed Drafting',
+      'Card Drafting',
+      'Hand Management',
+      'End Game Bonuses',
+    ],
+  },
+
+  'planning-managing': {
+    primaryMechanics: [
+      'Worker Placement',
+      'Action Points',
+      'Action Drafting',
+      'Network and Route Building',
+      'Market',
+      'Loans',
+      'Income',
+      'Tech Trees / Tech Tracks',
+      'Resource to Move',
+    ],
+    secondaryMechanics: [
+      'Hand Management',
+      'Open Drafting',
+      'Variable Player Powers',
+      'End Game Bonuses',
+      'Area Majority / Influence',
+    ],
+  },
+
+  'talking-guessing': {
+    primaryMechanics: [
+      'Communication Limits',
+      'Deduction',
+      'Acting',
+      'Storytelling',
+      'Questions and Answers',
+    ],
+    secondaryMechanics: [
+      'Team-Based Game',
+      'Voting',
+      'Hidden Roles',
+    ],
+    secondaryCategories: [
+      'Word Game',
+      'Party Game',
+    ],
+  },
+
+  'working-together': {
+    primaryMechanics: [
+      'Cooperative Game',
+      'Team-Based Game',
+    ],
+  },
+
+  'competing-directly': {
+    primaryMechanics: [
+      'Take That',
+      'Player Elimination',
+      'Area Majority / Influence',
+      'Area Control',
+      'Auction / Bidding',
+      'Betting and Bluffing',
+      'Race',
+    ],
+    secondaryMechanics: [
+      'Network and Route Building',
+      'Trick-taking',
+      'Market',
+    ],
+  },
+
+  'theme-story': {
+    primaryMechanics: [
+      'Narrative Choice / Paragraph',
+      'Storytelling',
+      'Scenario / Mission / Campaign Game',
+      'Role Playing',
+    ],
+    secondaryCategories: [
+      'Adventure',
+      'Fantasy',
+      'Horror',
+      'Science Fiction',
+      'Exploration',
+      'Mythology',
+    ],
+  },
+}
 
 // -----------------------------------------------------------------------------
 // Shared scoring helpers
@@ -385,6 +503,88 @@ function scoreMood(game, moodPreferences) {
 
   const scores = moodPreferences.map((mood) =>
     scoreSingleMood(game, mood),
+  )
+
+  const total = scores.reduce((sum, score) => sum + score, 0)
+
+  return total / scores.length
+}
+
+// -----------------------------------------------------------------------------
+// Individual game-style scoring
+// -----------------------------------------------------------------------------
+
+function scoreSingleStyle(game, style) {
+  const mechanics = Array.isArray(game?.mechanics)
+    ? game.mechanics
+    : []
+
+  const categories = Array.isArray(game?.categories)
+    ? game.categories
+    : []
+
+  if (style === 'quick-simple') {
+    const complexity = game?.complexity?.average
+    const maxMinutes = game?.playTime?.maxMinutes
+
+    if (
+      typeof complexity !== 'number' ||
+      typeof maxMinutes !== 'number'
+    ) {
+      return 0
+    }
+
+    if (complexity <= 1.75 && maxMinutes <= 30) {
+      return 1
+    }
+
+    if (complexity <= 2.25 && maxMinutes <= 45) {
+      return 0.5
+    }
+
+    return 0
+  }
+
+  const signals = STYLE_SIGNALS[style]
+
+  if (!signals) {
+    return 0
+  }
+
+  const hasPrimarySignal =
+    hasAnySignal(mechanics, signals.primaryMechanics)
+
+  if (hasPrimarySignal) {
+    return 1
+  }
+
+  const hasSecondarySignal =
+    hasAnySignal(mechanics, signals.secondaryMechanics) ||
+    hasAnySignal(categories, signals.secondaryCategories)
+
+  if (hasSecondarySignal) {
+    return 0.5
+  }
+
+  return 0
+}
+
+
+// -----------------------------------------------------------------------------
+// Combined game-style scoring
+// -----------------------------------------------------------------------------
+
+function scoreStyle(game, stylePreferences) {
+  if (
+    !Array.isArray(stylePreferences) ||
+    stylePreferences.length === 0 ||
+    stylePreferences.includes('no-preference')
+  ) {
+    return null
+  }
+
+  const scores = stylePreferences.map((style) =>
+    scoreSingleStyle(game, style),
   )
 
   const total = scores.reduce((sum, score) => sum + score, 0)
@@ -493,4 +693,5 @@ module.exports = {
   scorePlayTime,
   scoreComplexity,
   scoreMood,
+  scoreStyle,
 }

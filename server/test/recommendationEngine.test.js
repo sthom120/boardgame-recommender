@@ -7,6 +7,7 @@ const {
   scorePlayTime,
   scoreComplexity,
   scoreMood,
+  scoreStyle,
 } = require('../services/recommendationEngine')
 
 test('includes a standalone game that supports the selected player count', () => {
@@ -798,4 +799,126 @@ test('removes mood from scoring when there is no mood preference', () => {
   }
 
   assert.equal(scoreMood(game, ['no-preference']), null)
+})
+
+test('gives a strong working-things-out score for a primary mechanic', () => {
+  const game = {
+    mechanics: ['Deduction'],
+    categories: [],
+  }
+
+  assert.equal(scoreStyle(game, ['working-things-out']), 1)
+})
+
+test('gives a partial building-collecting score for a secondary mechanic', () => {
+  const game = {
+    mechanics: ['Hand Management'],
+    categories: [],
+  }
+
+  assert.equal(scoreStyle(game, ['building-collecting']), 0.5)
+})
+
+test('gives a strong planning-managing score for worker placement', () => {
+  const game = {
+    mechanics: ['Worker Placement'],
+    categories: [],
+  }
+
+  assert.equal(scoreStyle(game, ['planning-managing']), 1)
+})
+
+test('gives a partial talking-guessing score for a word-game category', () => {
+  const game = {
+    mechanics: [],
+    categories: ['Word Game'],
+  }
+
+  assert.equal(scoreStyle(game, ['talking-guessing']), 0.5)
+})
+
+test('gives a strong working-together score for cooperative play', () => {
+  const game = {
+    mechanics: ['Cooperative Game'],
+    categories: [],
+  }
+
+  assert.equal(scoreStyle(game, ['working-together']), 1)
+})
+
+test('gives a strong competing-directly score for a direct conflict mechanic', () => {
+  const game = {
+    mechanics: ['Take That'],
+    categories: [],
+  }
+
+  assert.equal(scoreStyle(game, ['competing-directly']), 1)
+})
+
+test('gives a partial theme-story score for a thematic category', () => {
+  const game = {
+    mechanics: [],
+    categories: ['Fantasy'],
+  }
+
+  assert.equal(scoreStyle(game, ['theme-story']), 0.5)
+})
+
+test('gives a strong quick-simple score to a short light game', () => {
+  const game = {
+    complexity: {
+      average: 1.5,
+    },
+    playTime: {
+      maxMinutes: 20,
+    },
+  }
+
+  assert.equal(scoreStyle(game, ['quick-simple']), 1)
+})
+
+test('gives a partial quick-simple score to a slightly longer or heavier game', () => {
+  const game = {
+    complexity: {
+      average: 2,
+    },
+    playTime: {
+      maxMinutes: 40,
+    },
+  }
+
+  assert.equal(scoreStyle(game, ['quick-simple']), 0.5)
+})
+
+test('averages two selected game-style scores', () => {
+  const game = {
+    mechanics: [
+      'Set Collection',
+      'Hand Management',
+    ],
+    categories: [],
+  }
+
+  assert.equal(
+    scoreStyle(
+      game,
+      ['building-collecting', 'planning-managing'],
+    ),
+    0.75,
+  )
+})
+
+test('gives no game-style score when mapped source data is missing', () => {
+  const game = {}
+
+  assert.equal(scoreStyle(game, ['working-things-out']), 0)
+})
+
+test('removes game style from scoring when there is no preference', () => {
+  const game = {
+    mechanics: ['Set Collection'],
+    categories: [],
+  }
+
+  assert.equal(scoreStyle(game, ['no-preference']), null)
 })
