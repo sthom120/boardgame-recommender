@@ -6,6 +6,7 @@ const {
   scorePlayerCountSuitability,
   scorePlayTime,
   scoreComplexity,
+  scoreMood,
 } = require('../services/recommendationEngine')
 
 test('includes a standalone game that supports the selected player count', () => {
@@ -698,4 +699,103 @@ test('removes complexity from scoring when there is no preference', () => {
   }
 
   assert.equal(scoreComplexity(game, 'no-preference'), null)
+})
+
+test('gives a strong social score for a primary social mechanic', () => {
+  const game = {
+    mechanics: ['Communication Limits'],
+    categories: [],
+  }
+
+  assert.equal(scoreMood(game, ['social']), 1)
+})
+
+test('gives a partial social score for a secondary social category', () => {
+  const game = {
+    mechanics: [],
+    categories: ['Party Game'],
+  }
+
+  assert.equal(scoreMood(game, ['social']), 0.5)
+})
+
+test('gives a strong relaxed score to a short low-complexity game', () => {
+  const game = {
+    complexity: {
+      average: 1.5,
+    },
+    playTime: {
+      maxMinutes: 30,
+    },
+    mechanics: [],
+    categories: [],
+  }
+
+  assert.equal(scoreMood(game, ['relaxed']), 1)
+})
+
+test('does not give a relaxed score when a high-conflict mechanic is present', () => {
+  const game = {
+    complexity: {
+      average: 1.5,
+    },
+    playTime: {
+      maxMinutes: 30,
+    },
+    mechanics: ['Take That'],
+    categories: [],
+  }
+
+  assert.equal(scoreMood(game, ['relaxed']), 0)
+})
+
+test('uses complexity as secondary evidence for strategic mood', () => {
+  const game = {
+    complexity: {
+      average: 3,
+    },
+    mechanics: [],
+    categories: [],
+  }
+
+  assert.equal(scoreMood(game, ['strategic']), 0.5)
+})
+
+test('gives a partial immersive score for a thematic category', () => {
+  const game = {
+    mechanics: [],
+    categories: ['Fantasy'],
+  }
+
+  assert.equal(scoreMood(game, ['immersive']), 0.5)
+})
+
+test('averages two selected mood scores', () => {
+  const game = {
+    complexity: {
+      average: 3,
+    },
+    mechanics: ['Communication Limits'],
+    categories: [],
+  }
+
+  assert.equal(
+    scoreMood(game, ['social', 'strategic']),
+    0.75,
+  )
+})
+
+test('gives no mood score when mapped source data is missing', () => {
+  const game = {}
+
+  assert.equal(scoreMood(game, ['social']), 0)
+})
+
+test('removes mood from scoring when there is no mood preference', () => {
+  const game = {
+    mechanics: ['Communication Limits'],
+    categories: ['Party Game'],
+  }
+
+  assert.equal(scoreMood(game, ['no-preference']), null)
 })

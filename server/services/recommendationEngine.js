@@ -144,6 +144,215 @@ function scoreComplexity(game, complexityPreference) {
   return 0
 }
 
+const HIGH_CONFLICT_MECHANICS = [
+  'Take That',
+  'Player Elimination',
+  'Area Majority / Influence',
+  'Area Control',
+  'Auction / Bidding',
+  'Betting and Bluffing',
+]
+
+const MOOD_SIGNALS = {
+  social: {
+    primaryMechanics: [
+      'Communication Limits',
+      'Team-Based Game',
+      'Acting',
+      'Singing',
+      'Role Playing',
+      'Storytelling',
+      'Player Judge',
+      'Voting',
+    ],
+    secondaryMechanics: [
+      'Deduction',
+      'Memory',
+    ],
+    secondaryCategories: [
+      'Party Game',
+      'Word Game',
+    ],
+  },
+
+  competitive: {
+    primaryMechanics: [
+      'Take That',
+      'Player Elimination',
+      'Area Majority / Influence',
+      'Area Control',
+      'Auction / Bidding',
+      'Betting and Bluffing',
+      'Race',
+      'Trick-taking',
+    ],
+    secondaryMechanics: [
+      'Network and Route Building',
+      'Set Collection',
+      'Majority Influence',
+      'Market',
+    ],
+  },
+
+  cooperative: {
+    primaryMechanics: [
+      'Cooperative Game',
+      'Team-Based Game',
+    ],
+  },
+
+  strategic: {
+    primaryMechanics: [
+      'Worker Placement',
+      'Action Drafting',
+      'Action Points',
+      'Network and Route Building',
+      'Tech Trees / Tech Tracks',
+      'Market',
+      'Loans',
+      'Income',
+      'Resource to Move',
+      'Area Majority / Influence',
+    ],
+    secondaryMechanics: [
+      'Hand Management',
+      'Set Collection',
+      'Open Drafting',
+      'End Game Bonuses',
+      'Variable Player Powers',
+    ],
+  },
+
+  immersive: {
+    primaryMechanics: [
+      'Narrative Choice / Paragraph',
+      'Storytelling',
+      'Scenario / Mission / Campaign Game',
+      'Role Playing',
+      'Campaign / Battle Card Driven',
+    ],
+    secondaryCategories: [
+      'Adventure',
+      'Fantasy',
+      'Horror',
+      'Science Fiction',
+      'Exploration',
+      'Mythology',
+      'Movies / TV / Radio theme',
+    ],
+  },
+
+  chaotic: {
+    primaryMechanics: [
+      'Take That',
+      'Push Your Luck',
+      'Player Judge',
+      'Acting',
+      'Singing',
+      'Betting and Bluffing',
+    ],
+    secondaryMechanics: [
+      'Dice Rolling',
+      'Simultaneous Action Selection',
+      'Real-Time',
+    ],
+    secondaryCategories: [
+      'Party Game',
+    ],
+  },
+}
+
+function hasAnySignal(values, signals = []) {
+  return signals.some((signal) => values.includes(signal))
+}
+
+function scoreSingleMood(game, mood) {
+  const mechanics = Array.isArray(game?.mechanics)
+    ? game.mechanics
+    : []
+
+  const categories = Array.isArray(game?.categories)
+    ? game.categories
+    : []
+
+  if (mood === 'relaxed') {
+    const complexity = game?.complexity?.average
+    const maxMinutes = game?.playTime?.maxMinutes
+
+    const hasHighConflictMechanic =
+      hasAnySignal(mechanics, HIGH_CONFLICT_MECHANICS)
+
+    if (
+      typeof complexity === 'number' &&
+      typeof maxMinutes === 'number' &&
+      complexity <= 2 &&
+      maxMinutes <= 60 &&
+      !hasHighConflictMechanic
+    ) {
+      return 1
+    }
+
+    if (
+      typeof complexity === 'number' &&
+      complexity <= 2.5 &&
+      !hasHighConflictMechanic
+    ) {
+      return 0.5
+    }
+
+    return 0
+  }
+
+  const signals = MOOD_SIGNALS[mood]
+
+  if (!signals) {
+    return 0
+  }
+
+  const hasPrimarySignal =
+    hasAnySignal(mechanics, signals.primaryMechanics)
+
+  if (hasPrimarySignal) {
+    return 1
+  }
+
+  const hasSecondarySignal =
+    hasAnySignal(mechanics, signals.secondaryMechanics) ||
+    hasAnySignal(categories, signals.secondaryCategories)
+
+  if (hasSecondarySignal) {
+    return 0.5
+  }
+
+  if (
+    mood === 'strategic' &&
+    typeof game?.complexity?.average === 'number' &&
+    game.complexity.average >= 2.5
+  ) {
+    return 0.5
+  }
+
+  return 0
+}
+
+function scoreMood(game, moodPreferences) {
+  if (
+    !Array.isArray(moodPreferences) ||
+    moodPreferences.length === 0 ||
+    moodPreferences.includes('no-preference')
+  ) {
+    return null
+  }
+
+  const scores = moodPreferences.map((mood) =>
+    scoreSingleMood(game, mood),
+  )
+
+  const total = scores.reduce((sum, score) => sum + score, 0)
+
+  return total / scores.length
+}
+
 function checkEligibility(game, answers) {
   if (game?.relationships?.baseGameIds?.length > 0) {
     return {
@@ -229,4 +438,5 @@ module.exports = {
   scorePlayerCountSuitability,
   scorePlayTime,
   scoreComplexity,
+  scoreMood,
 }
