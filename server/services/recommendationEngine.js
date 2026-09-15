@@ -628,6 +628,28 @@ function calculateWeightedScore(componentScores) {
   return weightedTotal / activeWeightTotal
 }
 
+
+// -----------------------------------------------------------------------------
+// Match labels and display threshold
+// -----------------------------------------------------------------------------
+
+function getMatchLabel(score) {
+  if (score >= 0.85) {
+    return 'Excellent match'
+  }
+
+  if (score >= 0.7) {
+    return 'Strong match'
+  }
+
+  if (score >= 0.55) {
+    return 'Good match'
+  }
+
+  return null
+}
+
+
 // -----------------------------------------------------------------------------
 // Hard eligibility checks
 // -----------------------------------------------------------------------------
@@ -730,4 +752,5 @@ module.exports = {
   scoreMood,
   scoreStyle,
   calculateWeightedScore,
+  getMatchLabel,
 }

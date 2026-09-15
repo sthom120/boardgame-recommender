@@ -9,6 +9,7 @@ const {
   scoreMood,
   scoreStyle,
   calculateWeightedScore,
+  getMatchLabel,
 } = require('../services/recommendationEngine')
 
 test('includes a standalone game that supports the selected player count', () => {
@@ -980,4 +981,24 @@ test('keeps an active zero score in the weighted calculation', () => {
   assert.ok(
     Math.abs(score - (0.45 / 0.65)) < 0.000001,
   )
+})
+
+test('labels scores of 0.85 and above as an excellent match', () => {
+  assert.equal(getMatchLabel(0.85), 'Excellent match')
+  assert.equal(getMatchLabel(1), 'Excellent match')
+})
+
+test('labels scores from 0.70 to below 0.85 as a strong match', () => {
+  assert.equal(getMatchLabel(0.7), 'Strong match')
+  assert.equal(getMatchLabel(0.84), 'Strong match')
+})
+
+test('labels scores from 0.55 to below 0.70 as a good match', () => {
+  assert.equal(getMatchLabel(0.55), 'Good match')
+  assert.equal(getMatchLabel(0.69), 'Good match')
+})
+
+test('hides recommendations below the minimum display threshold', () => {
+  assert.equal(getMatchLabel(0.549), null)
+  assert.equal(getMatchLabel(0), null)
 })
