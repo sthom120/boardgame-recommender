@@ -5,6 +5,7 @@ const {
   checkEligibility,
   scorePlayerCountSuitability,
   scorePlayTime,
+  scoreComplexity,
 } = require('../services/recommendationEngine')
 
 test('includes a standalone game that supports the selected player count', () => {
@@ -614,4 +615,87 @@ test('removes time from scoring when there is no time preference', () => {
   }
 
   assert.equal(scorePlayTime(game, 'no-preference'), null)
+})
+
+test('scores complexity against the documented complexity bands', () => {
+  const scenarios = [
+    {
+      preference: 'light',
+      average: 1.5,
+      expected: 1,
+    },
+    {
+      preference: 'light',
+      average: 2,
+      expected: 0.5,
+    },
+    {
+      preference: 'light',
+      average: 3,
+      expected: 0,
+    },
+    {
+      preference: 'some-strategy',
+      average: 2.25,
+      expected: 1,
+    },
+    {
+      preference: 'some-strategy',
+      average: 2.75,
+      expected: 0.5,
+    },
+    {
+      preference: 'moderate',
+      average: 3,
+      expected: 1,
+    },
+    {
+      preference: 'moderate',
+      average: 3.75,
+      expected: 0.5,
+    },
+    {
+      preference: 'deep',
+      average: 4,
+      expected: 1,
+    },
+    {
+      preference: 'deep',
+      average: 3.25,
+      expected: 0.5,
+    },
+  ]
+
+  for (const scenario of scenarios) {
+    const game = {
+      complexity: {
+        average: scenario.average,
+      },
+    }
+
+    assert.equal(
+      scoreComplexity(game, scenario.preference),
+      scenario.expected,
+    )
+  }
+})
+
+test('gives no complexity score when complexity data is missing', () => {
+  const game = {
+    complexity: {
+      average: null,
+    },
+  }
+
+  assert.equal(scoreComplexity(game, 'moderate'), 0)
+})
+
+test('removes complexity from scoring when there is no preference', () => {
+  const game = {
+    complexity: {
+      average: 4.5,
+    },
+  }
+
+  assert.equal(scoreComplexity(game, 'no-preference'), null)
 })

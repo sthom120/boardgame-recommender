@@ -76,6 +76,74 @@ function scorePlayTime(game, timePreference) {
   return 0
 }
 
+function scoreComplexity(game, complexityPreference) {
+  if (complexityPreference === 'no-preference') {
+    return null
+  }
+
+  const complexity = game?.complexity?.average
+
+  if (typeof complexity !== 'number') {
+    return 0
+  }
+
+  if (complexityPreference === 'light') {
+    if (complexity >= 1 && complexity <= 1.75) {
+      return 1
+    }
+
+    if (complexity > 1.75 && complexity <= 2.25) {
+      return 0.5
+    }
+
+    return 0
+  }
+
+  if (complexityPreference === 'some-strategy') {
+    if (complexity >= 1.5 && complexity <= 2.5) {
+      return 1
+    }
+
+    if (
+      (complexity >= 1 && complexity < 1.5) ||
+      (complexity > 2.5 && complexity <= 3)
+    ) {
+      return 0.5
+    }
+
+    return 0
+  }
+
+  if (complexityPreference === 'moderate') {
+    if (complexity >= 2.5 && complexity <= 3.5) {
+      return 1
+    }
+
+    if (
+      (complexity >= 2 && complexity < 2.5) ||
+      (complexity > 3.5 && complexity <= 4)
+    ) {
+      return 0.5
+    }
+
+    return 0
+  }
+
+  if (complexityPreference === 'deep') {
+    if (complexity >= 3.5 && complexity <= 5) {
+      return 1
+    }
+
+    if (complexity >= 3 && complexity < 3.5) {
+      return 0.5
+    }
+
+    return 0
+  }
+
+  return 0
+}
+
 function checkEligibility(game, answers) {
   if (game?.relationships?.baseGameIds?.length > 0) {
     return {
@@ -160,4 +228,5 @@ module.exports = {
   checkEligibility,
   scorePlayerCountSuitability,
   scorePlayTime,
+  scoreComplexity,
 }
