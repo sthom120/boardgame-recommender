@@ -9,6 +9,16 @@ const TIME_BUDGETS = {
   'up-to-120': 120,
 }
 
+// -----------------------------------------------------------------------------
+// Recommendation factor weights
+// -----------------------------------------------------------------------------
+const FACTOR_WEIGHTS = {
+  playerCount: 0.25,
+  time: 0.2,
+  complexity: 0.2,
+  mood: 0.2,
+  style: 0.15,
+}
 
 // -----------------------------------------------------------------------------
 // Player-count suitability scoring
@@ -592,6 +602,31 @@ function scoreStyle(game, stylePreferences) {
   return total / scores.length
 }
 
+// -----------------------------------------------------------------------------
+// Overall weighted score
+// -----------------------------------------------------------------------------
+
+function calculateWeightedScore(componentScores) {
+  let weightedTotal = 0
+  let activeWeightTotal = 0
+
+  for (const [factor, weight] of Object.entries(FACTOR_WEIGHTS)) {
+    const score = componentScores[factor]
+
+    if (score === null) {
+      continue
+    }
+
+    weightedTotal += score * weight
+    activeWeightTotal += weight
+  }
+
+  if (activeWeightTotal === 0) {
+    return 0
+  }
+
+  return weightedTotal / activeWeightTotal
+}
 
 // -----------------------------------------------------------------------------
 // Hard eligibility checks
@@ -694,4 +729,5 @@ module.exports = {
   scoreComplexity,
   scoreMood,
   scoreStyle,
+  calculateWeightedScore,
 }

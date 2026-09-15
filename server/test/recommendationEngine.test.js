@@ -8,6 +8,7 @@ const {
   scoreComplexity,
   scoreMood,
   scoreStyle,
+  calculateWeightedScore,
 } = require('../services/recommendationEngine')
 
 test('includes a standalone game that supports the selected player count', () => {
@@ -921,4 +922,62 @@ test('removes game style from scoring when there is no preference', () => {
   }
 
   assert.equal(scoreStyle(game, ['no-preference']), null)
+})
+
+test('gives a full overall score when every active factor scores fully', () => {
+  const componentScores = {
+    playerCount: 1,
+    time: 1,
+    complexity: 1,
+    mood: 1,
+    style: 1,
+  }
+
+  assert.equal(calculateWeightedScore(componentScores), 1)
+})
+
+test('combines component scores using the documented factor weights', () => {
+  const componentScores = {
+    playerCount: 0.8,
+    time: 1,
+    complexity: 0.5,
+    mood: 0.75,
+    style: 0.5,
+  }
+
+  const score = calculateWeightedScore(componentScores)
+
+  assert.ok(Math.abs(score - 0.725) < 0.000001)
+})
+
+test('normalises the remaining weights when preferences are inactive', () => {
+  const componentScores = {
+    playerCount: 0.8,
+    time: 1,
+    complexity: 0.5,
+    mood: null,
+    style: null,
+  }
+
+  const score = calculateWeightedScore(componentScores)
+
+  assert.ok(
+    Math.abs(score - (0.5 / 0.65)) < 0.000001,
+  )
+})
+
+test('keeps an active zero score in the weighted calculation', () => {
+  const componentScores = {
+    playerCount: 1,
+    time: 1,
+    complexity: 0,
+    mood: null,
+    style: null,
+  }
+
+  const score = calculateWeightedScore(componentScores)
+
+  assert.ok(
+    Math.abs(score - (0.45 / 0.65)) < 0.000001,
+  )
 })
