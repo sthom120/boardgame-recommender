@@ -651,6 +651,104 @@ function getMatchLabel(score) {
 
 
 // -----------------------------------------------------------------------------
+// Deterministic recommendation ordering
+// -----------------------------------------------------------------------------
+
+function roundScoreForTie(score) {
+  if (!Number.isFinite(score)) {
+    return 0
+  }
+
+  return Math.round((score + Number.EPSILON) * 10000) / 10000
+}
+
+function compareAscendingStrings(first, second) {
+  const firstValue = String(first ?? '')
+  const secondValue = String(second ?? '')
+
+  if (firstValue < secondValue) {
+    return -1
+  }
+
+  if (firstValue > secondValue) {
+    return 1
+  }
+
+  return 0
+}
+
+function compareRecommendations(first, second) {
+  const firstScore = roundScoreForTie(first?.internalScore)
+  const secondScore = roundScoreForTie(second?.internalScore)
+
+  // Higher overall recommendation score wins first.
+  if (firstScore !== secondScore) {
+    return secondScore - firstScore
+  }
+
+  // Component tie-break order follows the documented factor priority.
+  const componentOrder = [
+    'playerCount',
+    'time',
+    'complexity',
+    'mood',
+    'style',
+  ]
+
+  for (const factor of componentOrder) {
+    const firstComponent = first?.componentScores?.[factor]
+    const secondComponent = second?.componentScores?.[factor]
+
+    // Inactive or unavailable factors are skipped.
+    if (
+      !Number.isFinite(firstComponent) ||
+      !Number.isFinite(secondComponent)
+    ) {
+      continue
+    }
+
+    if (firstComponent !== secondComponent) {
+      return secondComponent - firstComponent
+    }
+  }
+
+  // Ratings are used only after questionnaire-based factors.
+  const ratingOrder = [
+    'bayesianAverage',
+    'usersRated',
+  ]
+
+  for (const rating of ratingOrder) {
+    const firstRating = first?.ratings?.[rating]
+    const secondRating = second?.ratings?.[rating]
+
+    if (
+      !Number.isFinite(firstRating) ||
+      !Number.isFinite(secondRating)
+    ) {
+      continue
+    }
+
+    if (firstRating !== secondRating) {
+      return secondRating - firstRating
+    }
+  }
+
+  // Stable alphabetical fallback.
+  const titleComparison = compareAscendingStrings(
+    first?.title,
+    second?.title,
+  )
+
+  if (titleComparison !== 0) {
+    return titleComparison
+  }
+
+  // Final stable fallback.
+  return compareAscendingStrings(first?.id, second?.id)
+}
+
+// -----------------------------------------------------------------------------
 // Hard eligibility checks
 // -----------------------------------------------------------------------------
 
@@ -753,4 +851,5 @@ module.exports = {
   scoreStyle,
   calculateWeightedScore,
   getMatchLabel,
+  compareRecommendations,
 }

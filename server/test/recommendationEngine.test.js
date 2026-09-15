@@ -10,6 +10,7 @@ const {
   scoreStyle,
   calculateWeightedScore,
   getMatchLabel,
+  compareRecommendations,
 } = require('../services/recommendationEngine')
 
 test('includes a standalone game that supports the selected player count', () => {
@@ -1001,4 +1002,163 @@ test('labels scores from 0.55 to below 0.70 as a good match', () => {
 test('hides recommendations below the minimum display threshold', () => {
   assert.equal(getMatchLabel(0.549), null)
   assert.equal(getMatchLabel(0), null)
+})
+
+test('orders recommendations by highest overall score first', () => {
+  const recommendations = [
+    {
+      id: 'game-lower',
+      title: 'Lower',
+      internalScore: 0.7,
+    },
+    {
+      id: 'game-higher',
+      title: 'Higher',
+      internalScore: 0.8,
+    },
+  ]
+
+  recommendations.sort(compareRecommendations)
+
+  assert.equal(recommendations[0].id, 'game-higher')
+})
+
+test('treats scores as tied after rounding to four decimal places', () => {
+  const recommendations = [
+    {
+      id: 'game-a',
+      title: 'Game A',
+      internalScore: 0.80004,
+      componentScores: {
+        playerCount: 0.7,
+        time: 1,
+        complexity: 1,
+        mood: 1,
+        style: 1,
+      },
+    },
+    {
+      id: 'game-b',
+      title: 'Game B',
+      internalScore: 0.80003,
+      componentScores: {
+        playerCount: 0.9,
+        time: 1,
+        complexity: 1,
+        mood: 1,
+        style: 1,
+      },
+    },
+  ]
+
+  recommendations.sort(compareRecommendations)
+
+  assert.equal(recommendations[0].id, 'game-b')
+})
+
+test('uses the documented component order to break score ties', () => {
+  const recommendations = [
+    {
+      id: 'game-a',
+      title: 'Game A',
+      internalScore: 0.8,
+      componentScores: {
+        playerCount: 0.8,
+        time: 1,
+        complexity: 1,
+        mood: 1,
+        style: 1,
+      },
+    },
+    {
+      id: 'game-b',
+      title: 'Game B',
+      internalScore: 0.8,
+      componentScores: {
+        playerCount: 0.9,
+        time: 0.5,
+        complexity: 0.5,
+        mood: 0.5,
+        style: 0.5,
+      },
+    },
+  ]
+
+  recommendations.sort(compareRecommendations)
+
+  assert.equal(recommendations[0].id, 'game-b')
+})
+
+test('skips inactive component scores during tie-breaking', () => {
+  const recommendations = [
+    {
+      id: 'game-a',
+      title: 'Game A',
+      internalScore: 0.8,
+      componentScores: {
+        playerCount: 0.8,
+        time: null,
+        complexity: 0.5,
+        mood: null,
+        style: null,
+      },
+    },
+    {
+      id: 'game-b',
+      title: 'Game B',
+      internalScore: 0.8,
+      componentScores: {
+        playerCount: 0.8,
+        time: null,
+        complexity: 1,
+        mood: null,
+        style: null,
+      },
+    },
+  ]
+
+  recommendations.sort(compareRecommendations)
+
+  assert.equal(recommendations[0].id, 'game-b')
+})
+
+test('uses ratings, title and id as stable late tie-breakers', () => {
+  const recommendations = [
+    {
+      id: 'game-b',
+      title: 'Alpha',
+      internalScore: 0.8,
+      componentScores: {
+        playerCount: 1,
+        time: 1,
+        complexity: 1,
+        mood: 1,
+        style: 1,
+      },
+      ratings: {
+        bayesianAverage: null,
+        usersRated: null,
+      },
+    },
+    {
+      id: 'game-a',
+      title: 'Alpha',
+      internalScore: 0.8,
+      componentScores: {
+        playerCount: 1,
+        time: 1,
+        complexity: 1,
+        mood: 1,
+        style: 1,
+      },
+      ratings: {
+        bayesianAverage: null,
+        usersRated: null,
+      },
+    },
+  ]
+
+  recommendations.sort(compareRecommendations)
+
+  assert.equal(recommendations[0].id, 'game-a')
 })
