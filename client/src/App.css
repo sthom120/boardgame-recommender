@@ -437,3 +437,514 @@
 .review-change-button:hover {
   border-color: var(--accent);
 }
+
+.results-page {
+  width: min(100%, 960px);
+  margin: 0 auto;
+}
+
+.results-header {
+  margin-bottom: 2rem;
+}
+
+.results-header .secondary-button {
+  margin-top: 1rem;
+}
+
+.results-list {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.recommendation-card {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: #ffffff;
+  border: 1px solid #d9ddd8;
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(23, 29, 28, 0.06);
+}
+
+.recommendation-image-wrapper {
+  width: 100%;
+}
+
+.recommendation-image,
+.recommendation-image-placeholder {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 14px;
+}
+
+.recommendation-image {
+  display: block;
+  object-fit: contain;
+}
+
+.recommendation-image-placeholder {
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: #eef1ed;
+  color: #5d665f;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.recommendation-content {
+  min-width: 0;
+}
+
+.match-label {
+  display: inline-block;
+  margin: 0 0 0.5rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: #e4eee6;
+  color: #244d34;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.recommendation-content h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.6rem;
+}
+
+.recommendation-summary {
+  margin: 0 0 1.25rem;
+  line-height: 1.6;
+}
+
+.recommendation-facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0 0 1.25rem;
+}
+
+.recommendation-facts div {
+  padding: 0.75rem;
+  background: #f6f7f4;
+  border-radius: 10px;
+}
+
+.recommendation-facts dt {
+  margin-bottom: 0.25rem;
+  color: #5d665f;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.recommendation-facts dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.match-reasons,
+.recommendation-caveats {
+  margin-top: 1.25rem;
+}
+
+.match-reasons h3,
+.recommendation-caveats h3 {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.match-reasons ul,
+.recommendation-caveats ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.why-details {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e5e1;
+}
+
+.why-details summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.why-details ul {
+  padding-left: 1.25rem;
+}
+
+.bgg-link {
+  display: inline-block;
+  margin-top: 1.25rem;
+  font-weight: 700;
+}
+
+@media (max-width: 720px) {
+  .recommendation-card {
+    grid-template-columns: 1fr;
+  }
+
+  .recommendation-image-wrapper {
+    max-width: 220px;
+  }
+
+  .recommendation-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  .recommendation-card {
+    padding: 1rem;
+  }
+
+  .recommendation-facts {
+    grid-template-columns: 1fr;
+  }
+}
+
+.no-results-card {
+  max-width: 620px;
+  padding: 1.5rem;
+  background: #ffffff;
+  border: 1px solid #d9ddd8;
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(23, 29, 28, 0.06);
+}
+
+.no-results-card h2 {
+  margin-top: 0;
+}
+
+.no-results-card p {
+  line-height: 1.6;
+}
+
+.no-results-card .primary-button {
+  margin-top: 0.75rem;
+}
+
+/* =========================================================
+   SHUFFLED BRAND PASS
+   ========================================================= */
+
+/* ---------- LANDING CARD ---------- */
+
+.landing-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(132, 137, 231, 0.18);
+  border-radius: 28px;
+  box-shadow:
+    0 24px 70px rgba(11, 22, 24, 0.08),
+    0 4px 18px rgba(85, 125, 245, 0.06);
+}
+
+.landing-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 7px;
+  background: linear-gradient(
+    90deg,
+    var(--coral),
+    var(--violet),
+    var(--accent)
+  );
+}
+
+
+/* ---------- SHUFFLED NAME ---------- */
+
+.app-name {
+  display: inline-block;
+  margin-bottom: 24px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: linear-gradient(
+    135deg,
+    var(--soft-coral),
+    var(--soft-violet)
+  );
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: none;
+}
+
+
+/* ---------- HEADINGS ---------- */
+
+.landing-card h1,
+.question-card h1,
+.review-card h1,
+.results-header h1 {
+  color: var(--text-primary);
+  letter-spacing: -0.045em;
+}
+
+
+/* ---------- PRIMARY BUTTONS ---------- */
+
+.primary-button {
+  border-radius: 14px;
+  background: linear-gradient(
+    135deg,
+    var(--accent),
+    var(--violet)
+  );
+  box-shadow: 0 8px 22px rgba(85, 125, 245, 0.24);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    filter 0.18s ease;
+}
+
+.primary-button:hover {
+  background: linear-gradient(
+    135deg,
+    var(--accent),
+    var(--violet)
+  );
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(85, 125, 245, 0.3);
+  filter: saturate(1.08);
+}
+
+.primary-button:active {
+  transform: translateY(0);
+}
+
+
+/* ---------- SECONDARY BUTTONS ---------- */
+
+.secondary-button,
+.review-change-button {
+  border-color: rgba(85, 125, 245, 0.25);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.82);
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    transform 0.18s ease;
+}
+
+.secondary-button:hover,
+.review-change-button:hover {
+  border-color: var(--accent);
+  background: var(--soft-blue);
+  transform: translateY(-1px);
+}
+
+
+/* ---------- QUESTION PROGRESS ---------- */
+
+.question-progress {
+  display: inline-block;
+  margin-bottom: 18px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: var(--soft-coral);
+  color: #923f31;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+
+/* ---------- QUESTION OPTIONS ---------- */
+
+.choice-option {
+  border-radius: 16px;
+  transition:
+    transform 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.choice-option:hover {
+  border-color: rgba(85, 125, 245, 0.55);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 16px rgba(11, 22, 24, 0.05);
+}
+
+.choice-option:has(input:checked) {
+  border-color: var(--accent);
+  background: linear-gradient(
+    135deg,
+    var(--soft-blue),
+    var(--soft-violet)
+  );
+  box-shadow:
+    0 0 0 1px var(--accent),
+    0 7px 20px rgba(85, 125, 245, 0.1);
+}
+
+.choice-option input {
+  accent-color: var(--accent);
+}
+
+
+/* ---------- NUMBER CONTROLS ---------- */
+
+.number-button {
+  border-radius: 14px;
+  border-color: rgba(85, 125, 245, 0.3);
+}
+
+.number-button:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--soft-blue);
+}
+
+.player-input-group input,
+.age-input-group input {
+  border-radius: 14px;
+}
+
+.player-input-group input:focus,
+.age-input-group input:focus {
+  border-color: var(--accent);
+}
+
+
+/* ---------- REVIEW ITEMS ---------- */
+
+.review-item {
+  border-radius: 16px;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.review-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(11, 22, 24, 0.05);
+}
+
+
+/* ---------- RESULTS ---------- */
+
+.results-header {
+  position: relative;
+}
+
+.results-header::after {
+  content: '';
+  display: block;
+  width: 88px;
+  height: 5px;
+  margin-top: 22px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    var(--coral),
+    var(--violet),
+    var(--accent)
+  );
+}
+
+.recommendation-card {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(132, 137, 231, 0.2);
+  box-shadow:
+    0 14px 40px rgba(11, 22, 24, 0.06),
+    0 2px 10px rgba(85, 125, 245, 0.04);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.recommendation-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    var(--coral),
+    var(--violet),
+    var(--accent)
+  );
+}
+
+.recommendation-card:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 20px 48px rgba(11, 22, 24, 0.09),
+    0 4px 14px rgba(85, 125, 245, 0.08);
+}
+
+
+/* ---------- RESULTS IMAGE PLACEHOLDER ---------- */
+
+.recommendation-image-placeholder {
+  background:
+    radial-gradient(
+      circle at 25% 25%,
+      rgba(246, 149, 128, 0.25),
+      transparent 45%
+    ),
+    radial-gradient(
+      circle at 75% 70%,
+      rgba(85, 125, 245, 0.22),
+      transparent 50%
+    ),
+    #f7f7fb;
+  color: var(--text-secondary);
+}
+
+
+/* ---------- MATCH BADGE ---------- */
+
+.match-label {
+  background: linear-gradient(
+    135deg,
+    var(--soft-coral),
+    var(--soft-violet)
+  );
+  color: #512f47;
+}
+
+
+/* ---------- FACT BOXES ---------- */
+
+.recommendation-facts div {
+  border: 1px solid rgba(132, 137, 231, 0.08);
+  background: #fafafd;
+}
+
+
+/* ---------- BGG LINK ---------- */
+
+.bgg-link {
+  color: var(--accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.bgg-link:hover {
+  color: #344fc8;
+}
+
+
+/* ---------- NO RESULTS ---------- */
+
+.no-results-card {
+  border-color: rgba(246, 149, 128, 0.35);
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 240, 235, 0.7),
+      rgba(238, 242, 255, 0.7)
+    ),
+    #ffffff;
+}

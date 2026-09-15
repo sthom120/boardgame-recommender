@@ -2,7 +2,7 @@ function LandingScreen({ onStart }) {
   return (
     <main className="landing-page">
       <section className="landing-card" aria-labelledby="landing-heading">
-        <p className="app-name">Board Game Recommender</p>
+        <p className="app-name">✦ Shuffled</p>
 
         <h1 id="landing-heading">
           Find a board game that fits your group

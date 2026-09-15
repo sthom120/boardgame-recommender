@@ -3,6 +3,7 @@ import './App.css'
 import LandingScreen from './components/LandingScreen'
 import Questionnaire from './components/Questionnaire'
 import ReviewScreen from './components/ReviewScreen'
+import ResultsScreen from './components/ResultsScreen'
 
 const initialAnswers = {
   players: '',
@@ -133,21 +134,13 @@ function App() {
   }
 
   if (screen === 'results') {
-    return (
-      <main className="app-page">
-        <section className="review-card">
-          <h1>Recommendations received</h1>
-
-          <p>
-            The backend returned{' '}
-            {recommendationResponse?.recommendationCount ?? 0} recommendations.
-          </p>
-
-          <p>The full results screen will be added next.</p>
-        </section>
-      </main>
-    )
-  }
+  return (
+    <ResultsScreen
+      response={recommendationResponse}
+      onChangeAnswers={showReview}
+    />
+  )
+}
 
   return null
 }
