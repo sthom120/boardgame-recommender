@@ -20,6 +20,25 @@ const FACTOR_WEIGHTS = {
   style: 0.15,
 }
 
+const COMPLEXITY_STRONG_RANGES = {
+  light: {
+    min: 1,
+    max: 1.75,
+  },
+  'some-strategy': {
+    min: 1.5,
+    max: 2.5,
+  },
+  moderate: {
+    min: 2.5,
+    max: 3.5,
+  },
+  deep: {
+    min: 3.5,
+    max: 5,
+  },
+}
+
 // -----------------------------------------------------------------------------
 // Player-count suitability scoring
 // -----------------------------------------------------------------------------
@@ -749,6 +768,130 @@ function compareRecommendations(first, second) {
 }
 
 // -----------------------------------------------------------------------------
+// Recommendation caveats
+// -----------------------------------------------------------------------------
+
+function getCommunitySuggestedAge(game) {
+  const communityPoll = game?.age?.communityPoll
+
+  if (!Array.isArray(communityPoll) || communityPoll.length === 0) {
+    return null
+  }
+
+  const usableEntries = communityPoll
+    .map((entry) => ({
+      age: Number(entry.age),
+      votes: Number(entry.votes),
+    }))
+    .filter(
+      (entry) =>
+        Number.isFinite(entry.age) &&
+        Number.isFinite(entry.votes),
+    )
+
+  if (usableEntries.length === 0) {
+    return null
+  }
+
+  usableEntries.sort((first, second) => {
+    if (first.votes !== second.votes) {
+      return second.votes - first.votes
+    }
+
+    return first.age - second.age
+  })
+
+  return usableEntries[0].age
+}
+
+function generateCaveats(
+  game,
+  answers,
+  componentScores,
+  internalScore,
+) {
+  if (
+    !Number.isFinite(internalScore) ||
+    internalScore < 0.55
+  ) {
+    return []
+  }
+
+  const caveats = []
+
+  // Player-count caveat
+  const playerScore = componentScores?.playerCount
+
+  if (
+    Number.isFinite(playerScore) &&
+    playerScore < 0.5
+  ) {
+    caveats.push(
+      `Works with ${answers.players} players, but community feedback is less positive at this player count.`,
+    )
+  }
+
+  // Play-time caveat
+  const timeBudget = TIME_BUDGETS[answers.time]
+  const maxMinutes = game?.playTime?.maxMinutes
+
+  if (
+    typeof timeBudget === 'number' &&
+    typeof maxMinutes === 'number' &&
+    maxMinutes > timeBudget &&
+    maxMinutes <= timeBudget * 1.1
+  ) {
+    caveats.push(
+      `This may run a little longer than your preferred ${timeBudget} minutes.`,
+    )
+  }
+
+  // Complexity caveat
+  const complexityScore = componentScores?.complexity
+  const complexity = game?.complexity?.average
+  const strongRange =
+    COMPLEXITY_STRONG_RANGES[answers.complexity]
+
+  if (
+    complexityScore === 0.5 &&
+    typeof complexity === 'number' &&
+    strongRange
+  ) {
+    if (complexity > strongRange.max) {
+      caveats.push(
+        'This is slightly more complex than the level you selected.',
+      )
+    } else if (complexity < strongRange.min) {
+      caveats.push(
+        'This is slightly lighter than the level you selected.',
+      )
+    }
+  }
+
+  // Age caveat
+  const publisherMinimumAge =
+    game?.age?.publisherMinimum
+
+  const communitySuggestedAge =
+    getCommunitySuggestedAge(game)
+
+  if (
+    typeof publisherMinimumAge === 'number' &&
+    typeof communitySuggestedAge === 'number' &&
+    Math.abs(
+      publisherMinimumAge - communitySuggestedAge,
+    ) >= 2
+  ) {
+    caveats.push(
+      `The publisher recommends ages ${publisherMinimumAge}+, while community feedback most strongly suggests ages ${communitySuggestedAge}+.`,
+    )
+  }
+
+  return caveats
+}
+
+
+// -----------------------------------------------------------------------------
 // Hard eligibility checks
 // -----------------------------------------------------------------------------
 
@@ -852,4 +995,5 @@ module.exports = {
   calculateWeightedScore,
   getMatchLabel,
   compareRecommendations,
+    generateCaveats,
 }

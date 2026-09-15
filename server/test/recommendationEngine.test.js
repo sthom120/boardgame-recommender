@@ -11,6 +11,7 @@ const {
   calculateWeightedScore,
   getMatchLabel,
   compareRecommendations,
+  generateCaveats,
 } = require('../services/recommendationEngine')
 
 test('includes a standalone game that supports the selected player count', () => {
@@ -1161,4 +1162,220 @@ test('uses ratings, title and id as stable late tie-breakers', () => {
   recommendations.sort(compareRecommendations)
 
   assert.equal(recommendations[0].id, 'game-a')
+})
+
+test('adds a player-count caveat when community suitability is below neutral', () => {
+  const game = {
+    age: {
+      publisherMinimum: 10,
+      communityPoll: [],
+    },
+  }
+
+  const caveats = generateCaveats(
+    game,
+    {
+      players: 2,
+      time: 'no-preference',
+      complexity: 'no-preference',
+    },
+    {
+      playerCount: 0.4,
+      time: null,
+      complexity: null,
+    },
+    0.7,
+  )
+
+  assert.ok(
+    caveats.includes(
+      'Works with 2 players, but community feedback is less positive at this player count.',
+    ),
+  )
+})
+
+test('does not add a player-count caveat for a neutral player score', () => {
+  const caveats = generateCaveats(
+    {
+      age: {
+        publisherMinimum: 10,
+        communityPoll: [],
+      },
+    },
+    {
+      players: 2,
+      time: 'no-preference',
+      complexity: 'no-preference',
+    },
+    {
+      playerCount: 0.5,
+      time: null,
+      complexity: null,
+    },
+    0.7,
+  )
+
+  assert.equal(caveats.length, 0)
+})
+
+test('adds a play-time caveat when the game is within the ten-percent tolerance', () => {
+  const caveats = generateCaveats(
+    {
+      playTime: {
+        maxMinutes: 65,
+      },
+      age: {
+        publisherMinimum: 10,
+        communityPoll: [],
+      },
+    },
+    {
+      players: 4,
+      time: 'up-to-60',
+      complexity: 'no-preference',
+    },
+    {
+      playerCount: 1,
+      time: 0.5,
+      complexity: null,
+    },
+    0.8,
+  )
+
+  assert.ok(
+    caveats.includes(
+      'This may run a little longer than your preferred 60 minutes.',
+    ),
+  )
+})
+
+test('adds a caveat when a partial complexity match is heavier than requested', () => {
+  const caveats = generateCaveats(
+    {
+      complexity: {
+        average: 2,
+      },
+      age: {
+        publisherMinimum: 10,
+        communityPoll: [],
+      },
+    },
+    {
+      players: 4,
+      time: 'no-preference',
+      complexity: 'light',
+    },
+    {
+      playerCount: 1,
+      time: null,
+      complexity: 0.5,
+    },
+    0.8,
+  )
+
+  assert.ok(
+    caveats.includes(
+      'This is slightly more complex than the level you selected.',
+    ),
+  )
+})
+
+test('adds a caveat when a partial complexity match is lighter than requested', () => {
+  const caveats = generateCaveats(
+    {
+      complexity: {
+        average: 2.25,
+      },
+      age: {
+        publisherMinimum: 10,
+        communityPoll: [],
+      },
+    },
+    {
+      players: 4,
+      time: 'no-preference',
+      complexity: 'moderate',
+    },
+    {
+      playerCount: 1,
+      time: null,
+      complexity: 0.5,
+    },
+    0.8,
+  )
+
+  assert.ok(
+    caveats.includes(
+      'This is slightly lighter than the level you selected.',
+    ),
+  )
+})
+
+test('adds an age caveat and uses the lower age when community votes are tied', () => {
+  const caveats = generateCaveats(
+    {
+      age: {
+        publisherMinimum: 12,
+        communityPoll: [
+          {
+            age: '10',
+            votes: 50,
+          },
+          {
+            age: '8',
+            votes: 50,
+          },
+        ],
+      },
+    },
+    {
+      players: 4,
+      time: 'no-preference',
+      complexity: 'no-preference',
+    },
+    {
+      playerCount: 1,
+      time: null,
+      complexity: null,
+    },
+    0.8,
+  )
+
+  assert.ok(
+    caveats.includes(
+      'The publisher recommends ages 12+, while community feedback most strongly suggests ages 8+.',
+    ),
+  )
+})
+
+test('does not generate caveats for a game below the display threshold', () => {
+  const caveats = generateCaveats(
+    {
+      playTime: {
+        maxMinutes: 65,
+      },
+      age: {
+        publisherMinimum: 12,
+        communityPoll: [
+          {
+            age: '8',
+            votes: 100,
+          },
+        ],
+      },
+    },
+    {
+      players: 2,
+      time: 'up-to-60',
+      complexity: 'light',
+    },
+    {
+      playerCount: 0.2,
+      time: 0.5,
+      complexity: 0.5,
+    },
+    0.54,
+  )
+
+  assert.deepEqual(caveats, [])
 })
