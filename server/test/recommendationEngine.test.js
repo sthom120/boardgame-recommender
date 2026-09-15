@@ -3,6 +3,7 @@ const assert = require('node:assert/strict')
 
 const {
   checkEligibility,
+  scorePlayerCountSuitability,
 } = require('../services/recommendationEngine')
 
 test('includes a standalone game that supports the selected player count', () => {
@@ -493,4 +494,63 @@ test('does not apply a play-time limit when there is no time preference', () => 
     eligible: true,
     reason: null,
   })
+})
+
+test('calculates player suitability from a high-confidence poll', () => {
+  const game = {
+    playerCountPoll: [
+      {
+        players: '3',
+        bestVotes: 100,
+        recommendedVotes: 80,
+        notRecommendedVotes: 20,
+      },
+    ],
+  }
+
+  const score = scorePlayerCountSuitability(game, 3)
+
+  assert.equal(score, 0.8)
+})
+
+test('pulls a low-confidence player poll toward the neutral score', () => {
+  const game = {
+    playerCountPoll: [
+      {
+        players: '3',
+        bestVotes: 10,
+        recommendedVotes: 0,
+        notRecommendedVotes: 0,
+      },
+    ],
+  }
+
+  const score = scorePlayerCountSuitability(game, 3)
+
+  assert.ok(Math.abs(score - 0.6) < 0.000001)
+})
+
+test('returns a neutral player score when no poll data exists', () => {
+  const game = {
+    playerCountPoll: [],
+  }
+
+  assert.equal(scorePlayerCountSuitability(game, 3), 0.5)
+})
+
+test('supports grouped player-count poll entries such as 5+', () => {
+  const game = {
+    playerCountPoll: [
+      {
+        players: '5+',
+        bestVotes: 40,
+        recommendedVotes: 10,
+        notRecommendedVotes: 0,
+      },
+    ],
+  }
+
+  const score = scorePlayerCountSuitability(game, 6)
+
+  assert.equal(score, 0.95)
 })

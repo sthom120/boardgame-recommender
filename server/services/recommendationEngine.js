@@ -5,6 +5,47 @@ const TIME_BUDGETS = {
   'up-to-120': 120,
 }
 
+function scorePlayerCountSuitability(game, players) {
+  const playerCountPoll = game?.playerCountPoll
+
+  if (!Array.isArray(playerCountPoll) || playerCountPoll.length === 0) {
+    return 0.5
+  }
+
+  const pollEntry = playerCountPoll.find((entry) => {
+    const label = String(entry.players)
+
+    if (label.endsWith('+')) {
+      const minimumPlayers = Number(label.slice(0, -1))
+      return Number.isFinite(minimumPlayers) && players >= minimumPlayers
+    }
+
+    return Number(label) === players
+  })
+
+  if (!pollEntry) {
+    return 0.5
+  }
+
+  const bestVotes = pollEntry.bestVotes ?? 0
+  const recommendedVotes = pollEntry.recommendedVotes ?? 0
+  const notRecommendedVotes = pollEntry.notRecommendedVotes ?? 0
+
+  const totalVotes =
+    bestVotes + recommendedVotes + notRecommendedVotes
+
+  if (totalVotes <= 0) {
+    return 0.5
+  }
+
+  const rawScore =
+    (bestVotes * 1 + recommendedVotes * 0.75) / totalVotes
+
+  const confidence = Math.min(totalVotes / 50, 1)
+
+  return confidence * rawScore + (1 - confidence) * 0.5
+}
+
 function checkEligibility(game, answers) {
   if (game?.relationships?.baseGameIds?.length > 0) {
     return {
@@ -87,4 +128,5 @@ function checkEligibility(game, answers) {
 
 module.exports = {
   checkEligibility,
+  scorePlayerCountSuitability,
 }
