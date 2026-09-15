@@ -1,5 +1,6 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
+const mockGames = require('../../fixtures/mock-games.json')
 
 const {
   checkEligibility,
@@ -13,6 +14,7 @@ const {
   compareRecommendations,
   generateCaveats,
   generateMatchReasons,
+    recommendGames,
 } = require('../services/recommendationEngine')
 
 test('includes a standalone game that supports the selected player count', () => {
@@ -1536,4 +1538,200 @@ test('names only the selected style that has matching evidence', () => {
   assert.deepEqual(reasons, [
     'Matches the building and collecting style you selected.',
   ])
+})
+
+test('runs the complete recommendation pipeline against the controlled fixtures', () => {
+  const answers = {
+    players: 4,
+    time: 'up-to-60',
+    complexity: 'some-strategy',
+    mood: ['cooperative'],
+    style: ['working-together'],
+    youngestPlayerAge: 12,
+    contentPreference: 'family-friendly',
+  }
+
+  const response = recommendGames(
+    mockGames,
+    answers,
+  )
+
+  assert.equal(response.resultState, 'matches')
+  assert.equal(response.recommendationCount, 3)
+
+  assert.deepEqual(
+    response.recommendations.map(
+      (recommendation) =>
+        recommendation.title,
+    ),
+    [
+      'Pandemic',
+      'Codenames',
+      'Just One',
+    ],
+  )
+})
+
+test('produces the same ordered recommendations for repeated identical input', () => {
+  const answers = {
+    players: 4,
+    time: 'up-to-60',
+    complexity: 'some-strategy',
+    mood: ['cooperative'],
+    style: ['working-together'],
+    youngestPlayerAge: 12,
+    contentPreference: 'family-friendly',
+  }
+
+  const firstResponse = recommendGames(
+    mockGames,
+    answers,
+  )
+
+  const secondResponse = recommendGames(
+    mockGames,
+    answers,
+  )
+
+  assert.deepEqual(
+    firstResponse,
+    secondResponse,
+  )
+})
+
+test('returns frontend-safe recommendation objects without internal numeric scores', () => {
+  const answers = {
+    players: 4,
+    time: 'up-to-60',
+    complexity: 'some-strategy',
+    mood: ['cooperative'],
+    style: ['working-together'],
+    youngestPlayerAge: 12,
+    contentPreference: 'family-friendly',
+  }
+
+  const response = recommendGames(
+    mockGames,
+    answers,
+  )
+
+  const recommendation =
+    response.recommendations[0]
+
+  assert.equal(
+    'internalScore' in recommendation,
+    false,
+  )
+
+  assert.equal(
+    'componentScores' in recommendation,
+    false,
+  )
+
+  assert.ok(
+    recommendation.matchReasons.length <= 2,
+  )
+
+  assert.ok(recommendation.matchLabel)
+  assert.ok(recommendation.detailsUrl)
+})
+
+test('returns a limited-match result when only one fixture qualifies', () => {
+  const answers = {
+    players: 1,
+    time: 'no-preference',
+    complexity: 'no-preference',
+    mood: ['strategic'],
+    style: ['building-collecting'],
+    youngestPlayerAge: 18,
+    contentPreference: 'no-preference',
+  }
+
+  const response = recommendGames(
+    mockGames,
+    answers,
+  )
+
+  assert.equal(
+    response.resultState,
+    'limited-matches',
+  )
+
+  assert.equal(
+    response.recommendationCount,
+    1,
+  )
+
+  assert.equal(
+    response.recommendations[0].title,
+    'Wyrmspan',
+  )
+})
+
+test('returns a no-match result when no fixture passes eligibility', () => {
+  const answers = {
+    players: 99,
+    time: 'no-preference',
+    complexity: 'no-preference',
+    mood: ['no-preference'],
+    style: ['no-preference'],
+    youngestPlayerAge: 18,
+    contentPreference: 'no-preference',
+  }
+
+  const response = recommendGames(
+    mockGames,
+    answers,
+  )
+
+  assert.deepEqual(response, {
+    resultState: 'no-matches',
+    recommendationCount: 0,
+    recommendations: [],
+  })
+})
+
+test('returns no more than five qualifying recommendations', () => {
+  const pandemic = mockGames.find(
+    (game) => game.title === 'Pandemic',
+  )
+
+  const games = Array.from(
+    { length: 6 },
+    (_, index) => ({
+      ...pandemic,
+      id: `test-game-${index + 1}`,
+      title: `Test Game ${index + 1}`,
+      source: {
+        ...pandemic.source,
+        externalId: String(900001 + index),
+      },
+    }),
+  )
+
+  const answers = {
+    players: 4,
+    time: 'up-to-60',
+    complexity: 'some-strategy',
+    mood: ['cooperative'],
+    style: ['working-together'],
+    youngestPlayerAge: 12,
+    contentPreference: 'family-friendly',
+  }
+
+  const response = recommendGames(
+    games,
+    answers,
+  )
+
+  assert.equal(response.resultState, 'matches')
+  assert.equal(response.recommendationCount, 5)
+  assert.equal(response.recommendations.length, 5)
+
+  assert.deepEqual(
+    response.recommendations.map(
+      (recommendation) => recommendation.rank,
+    ),
+    [1, 2, 3, 4, 5],
+  )
 })

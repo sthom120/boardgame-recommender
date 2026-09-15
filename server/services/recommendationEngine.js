@@ -1085,6 +1085,183 @@ function generateMatchReasons(
 }
 
 // -----------------------------------------------------------------------------
+// Frontend recommendation response
+// -----------------------------------------------------------------------------
+
+function getComplexityLabel(value) {
+  if (typeof value !== 'number') {
+    return 'Unknown'
+  }
+
+  if (value >= 1 && value < 1.75) {
+    return 'Light and easy'
+  }
+
+  if (value >= 1.75 && value < 2.25) {
+    return 'Some strategy'
+  }
+
+  if (value >= 2.25 && value < 3.5) {
+    return 'Moderately challenging'
+  }
+
+  if (value >= 3.5 && value <= 5) {
+    return 'Deep and challenging'
+  }
+
+  return 'Unknown'
+}
+
+function toRecommendationResponse(
+  candidate,
+  index,
+  answers,
+) {
+  const {
+    game,
+    internalScore,
+    componentScores,
+    matchLabel,
+  } = candidate
+
+  return {
+    rank: index + 1,
+    gameId: game.id,
+    title: game.title,
+    summary: game.description ?? null,
+    imageUrl: game?.images?.imageUrl ?? null,
+    matchLabel,
+    players: {
+      min: game?.playerRange?.min ?? null,
+      max: game?.playerRange?.max ?? null,
+    },
+    playTime: {
+      minMinutes: game?.playTime?.minMinutes ?? null,
+      maxMinutes: game?.playTime?.maxMinutes ?? null,
+    },
+    complexity: {
+      label: getComplexityLabel(
+        game?.complexity?.average,
+      ),
+    },
+    age: {
+      publisherMinimum:
+        game?.age?.publisherMinimum ?? null,
+    },
+    matchReasons: generateMatchReasons(
+      game,
+      answers,
+      componentScores,
+    ),
+    caveats: generateCaveats(
+      game,
+      answers,
+      componentScores,
+      internalScore,
+    ),
+    detailsUrl:
+      `https://boardgamegeek.com/boardgame/${game.source.externalId}`,
+  }
+}
+
+
+// -----------------------------------------------------------------------------
+// Complete recommendation pipeline
+// -----------------------------------------------------------------------------
+
+function recommendGames(games, answers) {
+  const sourceGames = Array.isArray(games)
+    ? games
+    : []
+
+  const candidates = []
+
+  for (const game of sourceGames) {
+    const eligibility = checkEligibility(
+      game,
+      answers,
+    )
+
+    if (!eligibility.eligible) {
+      continue
+    }
+
+    const componentScores = {
+      playerCount: scorePlayerCountSuitability(
+        game,
+        answers.players,
+      ),
+      time: scorePlayTime(
+        game,
+        answers.time,
+      ),
+      complexity: scoreComplexity(
+        game,
+        answers.complexity,
+      ),
+      mood: scoreMood(
+        game,
+        answers.mood,
+      ),
+      style: scoreStyle(
+        game,
+        answers.style,
+      ),
+    }
+
+    const internalScore =
+      calculateWeightedScore(componentScores)
+
+    const matchLabel =
+      getMatchLabel(internalScore)
+
+    if (!matchLabel) {
+      continue
+    }
+
+    candidates.push({
+      game,
+      id: game.id,
+      title: game.title,
+      ratings: game.ratings,
+      internalScore,
+      componentScores,
+      matchLabel,
+    })
+  }
+
+  candidates.sort(compareRecommendations)
+
+  const selectedCandidates =
+    candidates.slice(0, 5)
+
+  const recommendations =
+    selectedCandidates.map(
+      (candidate, index) =>
+        toRecommendationResponse(
+          candidate,
+          index,
+          answers,
+        ),
+    )
+
+  let resultState = 'no-matches'
+
+  if (recommendations.length >= 3) {
+    resultState = 'matches'
+  } else if (recommendations.length > 0) {
+    resultState = 'limited-matches'
+  }
+
+  return {
+    resultState,
+    recommendationCount: recommendations.length,
+    recommendations,
+  }
+}
+
+
+// -----------------------------------------------------------------------------
 // Hard eligibility checks
 // -----------------------------------------------------------------------------
 
@@ -1190,4 +1367,5 @@ module.exports = {
   compareRecommendations,
   generateCaveats,
   generateMatchReasons,
+  recommendGames,
 }
