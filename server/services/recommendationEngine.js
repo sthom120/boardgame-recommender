@@ -72,38 +72,88 @@ function scorePlayerCountSuitability(game, players) {
     return 0.5
   }
 
-  const pollEntry = playerCountPoll.find((entry) => {
+  // Prefer an exact player-count row first.
+  let pollEntry = playerCountPoll.find((entry) => {
     const label = String(entry.players)
 
     if (label.endsWith('+')) {
-      const minimumPlayers = Number(label.slice(0, -1))
-      return Number.isFinite(minimumPlayers) && players >= minimumPlayers
+      return false
     }
 
     return Number(label) === players
   })
+
+  // If no exact row exists, use the most specific applicable
+  // open-ended row, such as preferring 8+ over 7+ for 9 players.
+  if (!pollEntry) {
+    const applicableOpenEndedEntries = playerCountPoll
+      .map((entry) => {
+        const label = String(entry.players)
+
+        if (!label.endsWith('+')) {
+          return null
+        }
+
+        const minimumPlayers = Number(
+          label.slice(0, -1),
+        )
+
+        if (
+          !Number.isFinite(minimumPlayers) ||
+          players < minimumPlayers
+        ) {
+          return null
+        }
+
+        return {
+          entry,
+          minimumPlayers,
+        }
+      })
+      .filter(Boolean)
+      .sort(
+        (first, second) =>
+          second.minimumPlayers -
+          first.minimumPlayers,
+      )
+
+    pollEntry =
+      applicableOpenEndedEntries[0]?.entry
+  }
 
   if (!pollEntry) {
     return 0.5
   }
 
   const bestVotes = pollEntry.bestVotes ?? 0
-  const recommendedVotes = pollEntry.recommendedVotes ?? 0
-  const notRecommendedVotes = pollEntry.notRecommendedVotes ?? 0
+  const recommendedVotes =
+    pollEntry.recommendedVotes ?? 0
+  const notRecommendedVotes =
+    pollEntry.notRecommendedVotes ?? 0
 
   const totalVotes =
-    bestVotes + recommendedVotes + notRecommendedVotes
+    bestVotes +
+    recommendedVotes +
+    notRecommendedVotes
 
   if (totalVotes <= 0) {
     return 0.5
   }
 
   const rawScore =
-    (bestVotes * 1 + recommendedVotes * 0.75) / totalVotes
+    (bestVotes * 1 +
+      recommendedVotes * 0.75) /
+    totalVotes
 
-  const confidence = Math.min(totalVotes / 50, 1)
+  const confidence = Math.min(
+    totalVotes / 50,
+    1,
+  )
 
-  return confidence * rawScore + (1 - confidence) * 0.5
+  return (
+    confidence * rawScore +
+    (1 - confidence) * 0.5
+  )
 }
 
 

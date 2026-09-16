@@ -566,6 +566,52 @@ test('supports grouped player-count poll entries such as 5+', () => {
   assert.equal(score, 0.95)
 })
 
+test('prefers an exact player-count poll row over an open-ended row', () => {
+  const game = {
+    playerCountPoll: [
+      {
+        players: '7+',
+        bestVotes: 50,
+        recommendedVotes: 0,
+        notRecommendedVotes: 0,
+      },
+      {
+        players: '8',
+        bestVotes: 0,
+        recommendedVotes: 50,
+        notRecommendedVotes: 0,
+      },
+    ],
+  }
+
+  const score = scorePlayerCountSuitability(game, 8)
+
+  assert.equal(score, 0.75)
+})
+
+test('uses the most specific applicable open-ended player-count poll row', () => {
+  const game = {
+    playerCountPoll: [
+      {
+        players: '7+',
+        bestVotes: 50,
+        recommendedVotes: 0,
+        notRecommendedVotes: 0,
+      },
+      {
+        players: '8+',
+        bestVotes: 0,
+        recommendedVotes: 50,
+        notRecommendedVotes: 0,
+      },
+    ],
+  }
+
+  const score = scorePlayerCountSuitability(game, 9)
+
+  assert.equal(score, 0.75)
+})
+
 test('gives a full time score when the game fits within the selected budget', () => {
   const game = {
     playTime: {
