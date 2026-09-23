@@ -5,6 +5,10 @@ const {
   normalizeBggThingsXml,
 } = require('../integrations/bgg/bggNormalizer')
 
+// -----------------------------------------------------------------------------
+// Basic BGG game normalisation
+// -----------------------------------------------------------------------------
+
 test('normalizes basic BGG thing data into the app-owned game model', () => {
   const xml = `
     <items>
@@ -58,6 +62,10 @@ test('normalizes basic BGG thing data into the app-owned game model', () => {
     10,
   )
 })
+
+// -----------------------------------------------------------------------------
+// BGG metadata normalisation
+// -----------------------------------------------------------------------------
 
 test('normalizes images, complexity, mechanics, categories and ratings', () => {
   const xml = `
@@ -133,3 +141,114 @@ test('normalizes images, complexity, mechanics, categories and ratings', () => {
   })
 })
 
+// -----------------------------------------------------------------------------
+// BGG community poll normalisation
+// -----------------------------------------------------------------------------
+
+test('normalizes player-count and community age polls while preserving source labels', () => {
+  const xml = `
+    <items>
+      <item type="boardgame" id="266192">
+        <name
+          type="primary"
+          value="Wingspan"
+        />
+
+        <poll
+          name="suggested_numplayers"
+          title="User Suggested Number of Players"
+          totalvotes="100"
+        >
+          <results numplayers="1">
+            <result
+              value="Best"
+              numvotes="20"
+            />
+            <result
+              value="Recommended"
+              numvotes="60"
+            />
+            <result
+              value="Not Recommended"
+              numvotes="20"
+            />
+          </results>
+
+          <results numplayers="5+">
+            <result
+              value="Best"
+              numvotes="10"
+            />
+            <result
+              value="Recommended"
+              numvotes="30"
+            />
+            <result
+              value="Not Recommended"
+              numvotes="60"
+            />
+          </results>
+        </poll>
+
+        <poll
+          name="suggested_playerage"
+          title="User Suggested Player Age"
+          totalvotes="80"
+        >
+          <results>
+            <result
+              value="8"
+              numvotes="25"
+            />
+            <result
+              value="10"
+              numvotes="40"
+            />
+            <result
+              value="12"
+              numvotes="15"
+            />
+          </results>
+        </poll>
+      </item>
+    </items>
+  `
+
+  const [game] = normalizeBggThingsXml(xml)
+
+  assert.deepEqual(
+    game.playerCountPoll,
+    [
+      {
+        players: '1',
+        bestVotes: 20,
+        recommendedVotes: 60,
+        notRecommendedVotes: 20,
+      },
+      {
+        players: '5+',
+        bestVotes: 10,
+        recommendedVotes: 30,
+        notRecommendedVotes: 60,
+      },
+    ],
+  )
+
+  assert.deepEqual(
+    game.age.communityPoll,
+    [
+      {
+        age: '8',
+        votes: 25,
+      },
+      {
+        age: '10',
+        votes: 40,
+      },
+      {
+        age: '12',
+        votes: 15,
+      },
+    ],
+  )
+})

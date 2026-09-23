@@ -39,6 +39,19 @@ function toPositiveInteger(value) {
   return number
 }
 
+function toNonNegativeInteger(value) {
+  const number = Number(value)
+
+  if (
+    !Number.isInteger(number) ||
+    number < 0
+  ) {
+    return null
+  }
+
+  return number
+}
+
 function toPositiveNumber(value) {
   const number = Number(value)
 
@@ -82,6 +95,121 @@ function getLinkValues(item, type) {
       (link) =>
         cleanText(link?.value),
     )
+    .filter(Boolean)
+}
+
+function getPoll(item, pollName) {
+  return asArray(item?.poll).find(
+    (poll) =>
+      poll?.name === pollName,
+  )
+}
+
+function getPollVote(results, value) {
+  const result = asArray(
+    results?.result,
+  ).find(
+    (entry) =>
+      entry?.value === value,
+  )
+
+  return toNonNegativeInteger(
+    result?.numvotes,
+  )
+}
+
+// -----------------------------------------------------------------------------
+// Player-count poll normalisation
+// -----------------------------------------------------------------------------
+
+function normalizePlayerCountPoll(item) {
+  const poll = getPoll(
+    item,
+    'suggested_numplayers',
+  )
+
+  if (!poll) {
+    return []
+  }
+
+  return asArray(poll.results)
+    .map((results) => {
+      const players =
+        results?.numplayers
+
+      if (
+        players === undefined ||
+        players === null ||
+        String(players).trim() === ''
+      ) {
+        return null
+      }
+
+      return {
+        players: String(players),
+
+        bestVotes:
+          getPollVote(
+            results,
+            'Best',
+          ),
+
+        recommendedVotes:
+          getPollVote(
+            results,
+            'Recommended',
+          ),
+
+        notRecommendedVotes:
+          getPollVote(
+            results,
+            'Not Recommended',
+          ),
+      }
+    })
+    .filter(Boolean)
+}
+
+// -----------------------------------------------------------------------------
+// Community age poll normalisation
+// -----------------------------------------------------------------------------
+
+function normalizeCommunityAgePoll(item) {
+  const poll = getPoll(
+    item,
+    'suggested_playerage',
+  )
+
+  if (!poll) {
+    return []
+  }
+
+  const results = asArray(
+    poll?.results?.result,
+  )
+
+  return results
+    .map((result) => {
+      const age = result?.value
+      const votes =
+        toNonNegativeInteger(
+          result?.numvotes,
+        )
+
+      if (
+        age === undefined ||
+        age === null ||
+        String(age).trim() === '' ||
+        votes === null
+      ) {
+        return null
+      }
+
+      return {
+        age: String(age),
+        votes,
+      }
+    })
     .filter(Boolean)
 }
 
@@ -141,10 +269,15 @@ function normalizeBggItem(item) {
     },
 
     age: {
-      publisherMinimum: toPositiveInteger(
-        item?.minage?.value,
-      ),
-      communityPoll: [],
+      publisherMinimum:
+        toPositiveInteger(
+          item?.minage?.value,
+        ),
+
+      communityPoll:
+        normalizeCommunityAgePoll(
+          item,
+        ),
     },
 
     complexity: {
@@ -153,7 +286,10 @@ function normalizeBggItem(item) {
       ),
     },
 
-    playerCountPoll: [],
+    playerCountPoll:
+      normalizePlayerCountPoll(
+        item,
+      ),
 
     mechanics: getLinkValues(
       item,
@@ -166,13 +302,15 @@ function normalizeBggItem(item) {
     ),
 
     ratings: {
-      bayesianAverage: toPositiveNumber(
-        ratings?.bayesaverage?.value,
-      ),
+      bayesianAverage:
+        toPositiveNumber(
+          ratings?.bayesaverage?.value,
+        ),
 
-      usersRated: toPositiveInteger(
-        ratings?.usersrated?.value,
-      ),
+      usersRated:
+        toPositiveInteger(
+          ratings?.usersrated?.value,
+        ),
     },
 
     relationships: {
