@@ -184,3 +184,113 @@ test('stops retrying after the maximum number of temporary failures', async () =
     ],
   )
 })
+
+test('reuses a cached BGG response for an identical request', async () => {
+  let fetchCalls = 0
+  const cache = new Map()
+
+  const fetchImpl = async () => {
+    fetchCalls += 1
+
+    return {
+      ok: true,
+      status: 200,
+      text: async () =>
+        '<items><item id="266192" /></items>',
+    }
+  }
+
+  const firstXml = await fetchBggThingsXml(
+    ['266192'],
+    {
+      token: 'test-token',
+      fetchImpl,
+      cache,
+    },
+  )
+
+  const secondXml = await fetchBggThingsXml(
+    ['266192'],
+    {
+      token: 'test-token',
+      fetchImpl,
+      cache,
+    },
+  )
+
+  assert.equal(fetchCalls, 1)
+
+  assert.equal(
+    firstXml,
+    '<items><item id="266192" /></items>',
+  )
+
+  assert.equal(secondXml, firstXml)
+})
+
+test('refetches BGG data after the cached response expires', async () => {
+  let fetchCalls = 0
+  let currentTime = 1000000
+
+  const cache = new Map()
+
+  const fetchImpl = async () => {
+    fetchCalls += 1
+
+    return {
+      ok: true,
+      status: 200,
+      text: async () =>
+        `<items call="${fetchCalls}"></items>`,
+    }
+  }
+
+  const nowImpl = () => currentTime
+
+  const firstXml = await fetchBggThingsXml(
+    ['266192'],
+    {
+      token: 'test-token',
+      fetchImpl,
+      cache,
+      cacheTtlMs: 1000,
+      nowImpl,
+    },
+  )
+
+  currentTime += 500
+
+  const secondXml = await fetchBggThingsXml(
+    ['266192'],
+    {
+      token: 'test-token',
+      fetchImpl,
+      cache,
+      cacheTtlMs: 1000,
+      nowImpl,
+    },
+  )
+
+  assert.equal(fetchCalls, 1)
+  assert.equal(secondXml, firstXml)
+
+  currentTime += 600
+
+  const thirdXml = await fetchBggThingsXml(
+    ['266192'],
+    {
+      token: 'test-token',
+      fetchImpl,
+      cache,
+      cacheTtlMs: 1000,
+      nowImpl,
+    },
+  )
+
+  assert.equal(fetchCalls, 2)
+
+  assert.equal(
+    thirdXml,
+    '<items call="2"></items>',
+  )
+})

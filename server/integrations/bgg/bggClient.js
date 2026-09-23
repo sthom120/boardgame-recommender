@@ -9,6 +9,9 @@ const MAX_IDS_PER_REQUEST = 20
 
 const MAX_ATTEMPTS = 3
 
+const DEFAULT_CACHE_TTL_MS =
+  24 * 60 * 60 * 1000
+
 const TEMPORARY_FAILURE_STATUSES = [
   500,
   503,
@@ -35,6 +38,57 @@ function getRetryDelay(attemptNumber) {
 }
 
 // -----------------------------------------------------------------------------
+// Cache helpers
+// -----------------------------------------------------------------------------
+
+function getCachedXml(
+  cache,
+  cacheKey,
+  cacheTtlMs,
+  currentTime,
+) {
+  if (!cache) {
+    return null
+  }
+
+  const cachedEntry =
+    cache.get(cacheKey)
+
+  if (!cachedEntry) {
+    return null
+  }
+
+  const cacheAge =
+    currentTime - cachedEntry.cachedAt
+
+  if (cacheAge >= cacheTtlMs) {
+    cache.delete(cacheKey)
+    return null
+  }
+
+  return cachedEntry.xml
+}
+
+function cacheXml(
+  cache,
+  cacheKey,
+  xml,
+  currentTime,
+) {
+  if (!cache) {
+    return
+  }
+
+  cache.set(
+    cacheKey,
+    {
+      xml,
+      cachedAt: currentTime,
+    },
+  )
+}
+
+// -----------------------------------------------------------------------------
 // BGG thing request
 // -----------------------------------------------------------------------------
 
@@ -44,19 +98,31 @@ async function fetchBggThingsXml(
     token = process.env.BGG_API_TOKEN,
     fetchImpl = fetch,
     sleepImpl = sleep,
+    cache = null,
+    cacheTtlMs =
+      DEFAULT_CACHE_TTL_MS,
+    nowImpl = Date.now,
   } = {},
 ) {
   if (!token) {
-    throw new Error('BGG API token is required')
+    throw new Error(
+      'BGG API token is required',
+    )
   }
 
-  if (!Array.isArray(ids) || ids.length === 0) {
+  if (
+    !Array.isArray(ids) ||
+    ids.length === 0
+  ) {
     throw new Error(
       'At least one BGG id is required',
     )
   }
 
-  if (ids.length > MAX_IDS_PER_REQUEST) {
+  if (
+    ids.length >
+    MAX_IDS_PER_REQUEST
+  ) {
     throw new Error(
       `BGG thing requests support a maximum of ${MAX_IDS_PER_REQUEST} ids`,
     )
@@ -68,23 +134,53 @@ async function fetchBggThingsXml(
     `${BGG_API_BASE_URL}/thing` +
     `?id=${idList}&stats=1`
 
+  const cacheKey = url
+
+  const cachedXml = getCachedXml(
+    cache,
+    cacheKey,
+    cacheTtlMs,
+    nowImpl(),
+  )
+
+  if (cachedXml !== null) {
+    return cachedXml
+  }
+
   for (
     let attempt = 1;
     attempt <= MAX_ATTEMPTS;
     attempt += 1
   ) {
-    const response = await fetchImpl(url, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
+    const response =
+      await fetchImpl(
+        url,
+        {
+          headers: {
+            Authorization:
+              `Bearer ${token}`,
+          },
+        },
+      )
 
     if (response.ok) {
-      return response.text()
+      const xml =
+        await response.text()
+
+      cacheXml(
+        cache,
+        cacheKey,
+        xml,
+        nowImpl(),
+      )
+
+      return xml
     }
 
     const shouldRetry =
-      isTemporaryFailure(response.status) &&
+      isTemporaryFailure(
+        response.status,
+      ) &&
       attempt < MAX_ATTEMPTS
 
     if (!shouldRetry) {
