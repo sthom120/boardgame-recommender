@@ -1850,3 +1850,198 @@ test('returns no more than five qualifying recommendations', () => {
     [1, 2, 3, 4, 5],
   )
 })
+
+// -----------------------------------------------------------------------------
+// Documented recommendation scenarios
+// -----------------------------------------------------------------------------
+
+test('scenario 1 recommends suitable casual family games', () => {
+  const response = recommendGames(mockGames, {
+    players: 4,
+    time: 'up-to-60',
+    complexity: 'light',
+    mood: ['social'],
+    style: ['talking-guessing'],
+    youngestPlayerAge: 10,
+    contentPreference: 'family-friendly',
+  })
+
+  assert.deepEqual(
+    response.recommendations.map(
+      (recommendation) => recommendation.title,
+    ),
+    [
+      'Codenames',
+      'Just One',
+    ],
+  )
+
+  assert.equal(
+    response.resultState,
+    'limited-matches',
+  )
+})
+
+test('scenario 2 favours two-player strategic games', () => {
+  const response = recommendGames(mockGames, {
+    players: 2,
+    time: 'up-to-120',
+    complexity: 'moderate',
+    mood: ['strategic'],
+    style: ['planning-managing'],
+    youngestPlayerAge: 18,
+    contentPreference: 'no-preference',
+  })
+
+  assert.deepEqual(
+    response.recommendations.map(
+      (recommendation) => recommendation.title,
+    ),
+    [
+      'Brass: Birmingham',
+      'Wyrmspan',
+      'Pandemic',
+    ],
+  )
+
+  assert.equal(response.resultState, 'matches')
+})
+
+test('scenario 3 applies the quick cooperative-game constraints', () => {
+  const response = recommendGames(mockGames, {
+    players: 4,
+    time: 'up-to-30',
+    complexity: 'some-strategy',
+    mood: ['cooperative'],
+    style: ['working-together'],
+    youngestPlayerAge: 12,
+    contentPreference: 'family-friendly',
+  })
+
+  assert.deepEqual(
+    response.recommendations.map(
+      (recommendation) => recommendation.title,
+    ),
+    ['Codenames'],
+  )
+
+  assert.equal(
+    response.resultState,
+    'limited-matches',
+  )
+
+  assert.ok(
+    response.recommendations[0].playTime.maxMinutes <= 33,
+  )
+})
+
+test('scenario 4 favours a quick game for a large social group', () => {
+  const response = recommendGames(mockGames, {
+    players: 7,
+    time: 'up-to-30',
+    complexity: 'light',
+    mood: ['chaotic'],
+    style: ['talking-guessing'],
+    youngestPlayerAge: 18,
+    contentPreference: 'no-preference',
+  })
+
+  assert.deepEqual(
+    response.recommendations.map(
+      (recommendation) => recommendation.title,
+    ),
+    ['Codenames'],
+  )
+
+  assert.ok(
+    response.recommendations[0].players.max >= 7,
+  )
+})
+
+test('scenario 5 recommends only games that officially support solo play', () => {
+  const response = recommendGames(mockGames, {
+    players: 1,
+    time: 'up-to-120',
+    complexity: 'moderate',
+    mood: ['immersive'],
+    style: ['theme-story'],
+    youngestPlayerAge: 18,
+    contentPreference: 'no-preference',
+  })
+
+  assert.deepEqual(
+    response.recommendations.map(
+      (recommendation) => recommendation.title,
+    ),
+    [
+      'Under Falling Skies',
+      'Wyrmspan',
+    ],
+  )
+
+  for (const recommendation of response.recommendations) {
+    assert.ok(recommendation.players.min <= 1)
+    assert.ok(recommendation.players.max >= 1)
+  }
+})
+
+test('scenario 6 removes open preferences from scoring', () => {
+  const response = recommendGames(mockGames, {
+    players: 3,
+    time: 'no-preference',
+    complexity: 'no-preference',
+    mood: ['no-preference'],
+    style: ['no-preference'],
+    youngestPlayerAge: 14,
+    contentPreference: 'no-preference',
+  })
+
+  assert.deepEqual(
+    response.recommendations.map(
+      (recommendation) => recommendation.title,
+    ),
+    [
+      'Brass: Birmingham',
+      'Pandemic',
+      'Wyrmspan',
+    ],
+  )
+
+  assert.equal(response.resultState, 'matches')
+
+  for (const recommendation of response.recommendations) {
+    assert.ok(recommendation.players.min <= 3)
+    assert.ok(recommendation.players.max >= 3)
+  }
+})
+
+test('scenario 7 combines two mood and two style preferences without increasing their weights', () => {
+  const response = recommendGames(mockGames, {
+    players: 4,
+    time: 'up-to-60',
+    complexity: 'some-strategy',
+    mood: [
+      'social',
+      'competitive',
+    ],
+    style: [
+      'talking-guessing',
+      'competing-directly',
+    ],
+    youngestPlayerAge: 14,
+    contentPreference: 'no-preference',
+  })
+
+  assert.deepEqual(
+    response.recommendations.map(
+      (recommendation) => recommendation.title,
+    ),
+    [
+      'Codenames',
+      'Pandemic',
+      'Just One',
+    ],
+  )
+
+  assert.equal(response.resultState, 'matches')
+})
