@@ -252,3 +252,44 @@ test('normalizes player-count and community age polls while preserving source la
     ],
   )
 })
+
+// -----------------------------------------------------------------------------
+// BGG expansion relationship normalisation
+// -----------------------------------------------------------------------------
+
+test('normalizes inbound expansion relationships as base-game ids', () => {
+  const xml = `
+    <items>
+      <item type="boardgame" id="290448">
+        <name
+          type="primary"
+          value="Wingspan: European Expansion"
+        />
+
+        <link
+          type="boardgameexpansion"
+          id="266192"
+          value="Wingspan"
+          inbound="true"
+        />
+
+        <link
+          type="boardgameexpansion"
+          id="999999"
+          value="A Related Expansion"
+        />
+      </item>
+    </items>
+  `
+
+  const [game] = normalizeBggThingsXml(xml)
+
+  assert.deepEqual(
+    game.relationships,
+    {
+      baseGameIds: [
+        'game-266192',
+      ],
+    },
+  )
+})

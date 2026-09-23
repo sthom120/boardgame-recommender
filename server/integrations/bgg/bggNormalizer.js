@@ -98,6 +98,27 @@ function getLinkValues(item, type) {
     .filter(Boolean)
 }
 
+function getBaseGameIds(item) {
+  return asArray(item?.link)
+    .filter(
+      (link) =>
+        link?.type === 'boardgameexpansion' &&
+        String(link?.inbound).toLowerCase() ===
+          'true',
+    )
+    .map((link) => {
+      const externalId =
+        cleanText(String(link?.id ?? ''))
+
+      if (!externalId) {
+        return null
+      }
+
+      return `game-${externalId}`
+    })
+    .filter(Boolean)
+}
+
 function getPoll(item, pollName) {
   return asArray(item?.poll).find(
     (poll) =>
@@ -314,8 +335,8 @@ function normalizeBggItem(item) {
     },
 
     relationships: {
-      baseGameIds: [],
-    },
+  baseGameIds: getBaseGameIds(item),
+},
 
     content: {
       classification: 'unknown',
