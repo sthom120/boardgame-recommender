@@ -293,3 +293,96 @@ test('normalizes inbound expansion relationships as base-game ids', () => {
     },
   )
 })
+
+// -----------------------------------------------------------------------------
+// Missing-data and UTF-8 normalisation
+// -----------------------------------------------------------------------------
+
+test('preserves predictable missing values without fabricating BGG data', () => {
+  const xml = `
+    <items>
+      <item type="boardgame" id="129622">
+        <name
+          type="primary"
+          value="Love Letter"
+        />
+      </item>
+    </items>
+  `
+
+  const [game] = normalizeBggThingsXml(xml)
+
+  assert.equal(game.description, null)
+  assert.equal(game.yearPublished, null)
+
+  assert.deepEqual(game.images, {
+    thumbnailUrl: null,
+    imageUrl: null,
+  })
+
+  assert.deepEqual(game.playerRange, {
+    min: null,
+    max: null,
+  })
+
+  assert.deepEqual(game.playTime, {
+    minMinutes: null,
+    maxMinutes: null,
+  })
+
+  assert.deepEqual(game.age, {
+    publisherMinimum: null,
+    communityPoll: [],
+  })
+
+  assert.deepEqual(game.complexity, {
+    average: null,
+  })
+
+  assert.deepEqual(game.playerCountPoll, [])
+  assert.deepEqual(game.mechanics, [])
+  assert.deepEqual(game.categories, [])
+
+  assert.deepEqual(game.ratings, {
+    bayesianAverage: null,
+    usersRated: null,
+  })
+
+  assert.deepEqual(game.relationships, {
+    baseGameIds: [],
+  })
+
+  assert.deepEqual(game.content, {
+    classification: 'unknown',
+  })
+})
+
+test('preserves UTF-8 characters and decodes XML entities', () => {
+  const xml = `
+    <items>
+      <item type="boardgame" id="123456">
+        <name
+          type="primary"
+          value="Café – Édition spéciale"
+        />
+
+        <description>
+          Crème brûlée &amp; piñata.
+        </description>
+      </item>
+    </items>
+  `
+
+  const [game] = normalizeBggThingsXml(xml)
+
+  assert.equal(
+    game.title,
+    'Café – Édition spéciale',
+  )
+
+  assert.equal(
+    game.description,
+    'Crème brûlée & piñata.',
+  )
+})
+
