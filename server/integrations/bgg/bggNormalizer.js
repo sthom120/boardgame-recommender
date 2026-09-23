@@ -39,6 +39,19 @@ function toPositiveInteger(value) {
   return number
 }
 
+function toPositiveNumber(value) {
+  const number = Number(value)
+
+  if (
+    !Number.isFinite(number) ||
+    number <= 0
+  ) {
+    return null
+  }
+
+  return number
+}
+
 function getPrimaryName(item) {
   const names = asArray(item?.name)
 
@@ -59,12 +72,28 @@ function cleanText(value) {
   return cleaned || null
 }
 
+function getLinkValues(item, type) {
+  return asArray(item?.link)
+    .filter(
+      (link) =>
+        link?.type === type,
+    )
+    .map(
+      (link) =>
+        cleanText(link?.value),
+    )
+    .filter(Boolean)
+}
+
 // -----------------------------------------------------------------------------
 // Individual BGG item normalisation
 // -----------------------------------------------------------------------------
 
 function normalizeBggItem(item) {
   const externalId = String(item?.id ?? '')
+
+  const ratings =
+    item?.statistics?.ratings
 
   return {
     id: `game-${externalId}`,
@@ -85,8 +114,12 @@ function normalizeBggItem(item) {
     ),
 
     images: {
-      thumbnailUrl: null,
-      imageUrl: null,
+      thumbnailUrl: cleanText(
+        item?.thumbnail,
+      ),
+      imageUrl: cleanText(
+        item?.image,
+      ),
     },
 
     playerRange: {
@@ -115,18 +148,31 @@ function normalizeBggItem(item) {
     },
 
     complexity: {
-      average: null,
+      average: toPositiveNumber(
+        ratings?.averageweight?.value,
+      ),
     },
 
     playerCountPoll: [],
 
-    mechanics: [],
+    mechanics: getLinkValues(
+      item,
+      'boardgamemechanic',
+    ),
 
-    categories: [],
+    categories: getLinkValues(
+      item,
+      'boardgamecategory',
+    ),
 
     ratings: {
-      bayesianAverage: null,
-      usersRated: null,
+      bayesianAverage: toPositiveNumber(
+        ratings?.bayesaverage?.value,
+      ),
+
+      usersRated: toPositiveInteger(
+        ratings?.usersrated?.value,
+      ),
     },
 
     relationships: {
