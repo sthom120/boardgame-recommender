@@ -566,6 +566,75 @@ test('supports grouped player-count poll entries such as 5+', () => {
   assert.equal(score, 0.95)
 })
 
+
+test('includes a game exactly ten percent over the selected play-time budget', () => {
+  const game = {
+    relationships: {
+      baseGameIds: [],
+    },
+    playerRange: {
+      min: 1,
+      max: 5,
+    },
+    playTime: {
+      maxMinutes: 66,
+    },
+    age: {
+      publisherMinimum: 10,
+    },
+    content: {
+      classification: 'family-friendly',
+    },
+  }
+
+  const result = checkEligibility(game, {
+    players: 4,
+    time: 'up-to-60',
+    youngestPlayerAge: 12,
+    contentPreference: 'family-friendly',
+  })
+
+  assert.equal(result.eligible, true)
+  assert.equal(
+    scorePlayTime(game, 'up-to-60'),
+    0.5,
+  )
+})
+
+test('keeps a game with missing play-time data when more than two hours is selected', () => {
+  const game = {
+    relationships: {
+      baseGameIds: [],
+    },
+    playerRange: {
+      min: 1,
+      max: 5,
+    },
+    playTime: {
+      maxMinutes: null,
+    },
+    age: {
+      publisherMinimum: 10,
+    },
+    content: {
+      classification: 'family-friendly',
+    },
+  }
+
+  const result = checkEligibility(game, {
+    players: 4,
+    time: 'over-120',
+    youngestPlayerAge: 12,
+    contentPreference: 'family-friendly',
+  })
+
+  assert.equal(result.eligible, true)
+  assert.equal(
+    scorePlayTime(game, 'over-120'),
+    1,
+  )
+})
+
 test('prefers an exact player-count poll row over an open-ended row', () => {
   const game = {
     playerCountPoll: [
