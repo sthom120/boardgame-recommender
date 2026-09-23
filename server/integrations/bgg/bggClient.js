@@ -7,6 +7,33 @@ const BGG_API_BASE_URL =
 
 const MAX_IDS_PER_REQUEST = 20
 
+const MAX_ATTEMPTS = 3
+
+const TEMPORARY_FAILURE_STATUSES = [
+  500,
+  503,
+]
+
+// -----------------------------------------------------------------------------
+// Retry helpers
+// -----------------------------------------------------------------------------
+
+function sleep(milliseconds) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, milliseconds)
+  })
+}
+
+function isTemporaryFailure(status) {
+  return TEMPORARY_FAILURE_STATUSES.includes(
+    status,
+  )
+}
+
+function getRetryDelay(attemptNumber) {
+  return 5000 * attemptNumber
+}
+
 // -----------------------------------------------------------------------------
 // BGG thing request
 // -----------------------------------------------------------------------------
@@ -16,6 +43,7 @@ async function fetchBggThingsXml(
   {
     token = process.env.BGG_API_TOKEN,
     fetchImpl = fetch,
+    sleepImpl = sleep,
   } = {},
 ) {
   if (!token) {
@@ -40,19 +68,40 @@ async function fetchBggThingsXml(
     `${BGG_API_BASE_URL}/thing` +
     `?id=${idList}&stats=1`
 
-  const response = await fetchImpl(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
+  for (
+    let attempt = 1;
+    attempt <= MAX_ATTEMPTS;
+    attempt += 1
+  ) {
+    const response = await fetchImpl(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
 
-  if (!response.ok) {
-    throw new Error(
-      `BGG API request failed with status ${response.status}`,
-    )
+    if (response.ok) {
+      return response.text()
+    }
+
+    const shouldRetry =
+      isTemporaryFailure(response.status) &&
+      attempt < MAX_ATTEMPTS
+
+    if (!shouldRetry) {
+      throw new Error(
+        `BGG API request failed with status ${response.status}`,
+      )
+    }
+
+    const delay =
+      getRetryDelay(attempt)
+
+    await sleepImpl(delay)
   }
 
-  return response.text()
+  throw new Error(
+    'BGG API request failed unexpectedly',
+  )
 }
 
 // -----------------------------------------------------------------------------

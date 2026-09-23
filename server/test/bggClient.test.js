@@ -104,3 +104,83 @@ test('rejects requests containing more than twenty BGG ids', async () => {
     /20/,
   )
 })
+
+test('retries a temporary BGG failure and succeeds on the next attempt', async () => {
+  let fetchCalls = 0
+  const delays = []
+
+  const fetchImpl = async () => {
+    fetchCalls += 1
+
+    if (fetchCalls === 1) {
+      return {
+        ok: false,
+        status: 503,
+      }
+    }
+
+    return {
+      ok: true,
+      status: 200,
+      text: async () => '<items></items>',
+    }
+  }
+
+  const sleepImpl = async (milliseconds) => {
+    delays.push(milliseconds)
+  }
+
+  const xml = await fetchBggThingsXml(
+    ['266192'],
+    {
+      token: 'test-token',
+      fetchImpl,
+      sleepImpl,
+    },
+  )
+
+  assert.equal(fetchCalls, 2)
+  assert.deepEqual(delays, [5000])
+  assert.equal(xml, '<items></items>')
+})
+
+test('stops retrying after the maximum number of temporary failures', async () => {
+  let fetchCalls = 0
+  const delays = []
+
+  const fetchImpl = async () => {
+    fetchCalls += 1
+
+    return {
+      ok: false,
+      status: 500,
+    }
+  }
+
+  const sleepImpl = async (milliseconds) => {
+    delays.push(milliseconds)
+  }
+
+  await assert.rejects(
+    () =>
+      fetchBggThingsXml(
+        ['266192'],
+        {
+          token: 'test-token',
+          fetchImpl,
+          sleepImpl,
+        },
+      ),
+    /status 500/,
+  )
+
+  assert.equal(fetchCalls, 3)
+
+  assert.deepEqual(
+    delays,
+    [
+      5000,
+      10000,
+    ],
+  )
+})
