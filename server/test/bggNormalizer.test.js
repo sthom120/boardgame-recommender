@@ -1,5 +1,7 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
+const fs = require('node:fs')
+const path = require('node:path')
 
 const {
   normalizeBggThingsXml,
@@ -386,3 +388,82 @@ test('preserves UTF-8 characters and decodes XML entities', () => {
   )
 })
 
+// -----------------------------------------------------------------------------
+// Representative BGG fixture normalisation
+// -----------------------------------------------------------------------------
+
+test('normalizes representative records from the BGG test matrix', () => {
+  const fixturePath = path.join(
+    __dirname,
+    'fixtures',
+    'bgg-representative-things.xml',
+  )
+
+  const xml = fs.readFileSync(
+    fixturePath,
+    'utf8',
+  )
+
+  const games = normalizeBggThingsXml(xml)
+
+  assert.equal(games.length, 3)
+
+  const wingspan = games.find(
+    (game) =>
+      game.id === 'game-266192',
+  )
+
+  const underFallingSkies = games.find(
+    (game) =>
+      game.id === 'game-306735',
+  )
+
+  const europeanExpansion = games.find(
+    (game) =>
+      game.id === 'game-290448',
+  )
+
+  assert.ok(wingspan)
+  assert.ok(underFallingSkies)
+  assert.ok(europeanExpansion)
+
+  assert.equal(
+    wingspan.title,
+    'Wingspan',
+  )
+
+  assert.deepEqual(
+    wingspan.playerRange,
+    {
+      min: 1,
+      max: 5,
+    },
+  )
+
+  assert.equal(
+    wingspan.complexity.average,
+    2.4815,
+  )
+
+  assert.deepEqual(
+    underFallingSkies.playerRange,
+    {
+      min: 1,
+      max: 1,
+    },
+  )
+
+  assert.equal(
+    underFallingSkies.playerCountPoll[0].players,
+    '1+',
+  )
+
+  assert.deepEqual(
+    europeanExpansion.relationships,
+    {
+      baseGameIds: [
+        'game-266192',
+      ],
+    },
+  )
+})
