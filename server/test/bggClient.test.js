@@ -185,6 +185,36 @@ test('stops retrying after the maximum number of temporary failures', async () =
   )
 })
 
+
+test('marks an exhausted temporary BGG failure as unavailable', async () => {
+  const fetchImpl = async () => ({
+    ok: false,
+    status: 503,
+  })
+
+  const sleepImpl = async () => {}
+
+  await assert.rejects(
+    () =>
+      fetchBggThingsXml(
+        ['266192'],
+        {
+          token: 'test-token',
+          fetchImpl,
+          sleepImpl,
+        },
+      ),
+    (error) => {
+      assert.equal(
+        error.code,
+        'BGG_UNAVAILABLE',
+      )
+
+      return true
+    },
+  )
+})
+
 test('reuses a cached BGG response for an identical request', async () => {
   let fetchCalls = 0
   const cache = new Map()

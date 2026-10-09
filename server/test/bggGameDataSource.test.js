@@ -87,3 +87,35 @@ test('uses the controlled Shuffled BGG catalogue by default', async () => {
     ],
   )
 })
+
+test('translates a temporary BGG outage into a recommendation unavailable error', async () => {
+  const fetchGamesImpl = async () => {
+    const error =
+      new Error(
+        'BGG API request failed with status 503',
+      )
+
+    error.code =
+      'BGG_UNAVAILABLE'
+
+    throw error
+  }
+
+  const dataSource =
+    createBggGameDataSource({
+      fetchGamesImpl,
+    })
+
+  await assert.rejects(
+    () =>
+      dataSource.getGames(),
+    (error) => {
+      assert.equal(
+        error.code,
+        'RECOMMENDATION_UNAVAILABLE',
+      )
+
+      return true
+    },
+  )
+})

@@ -2,10 +2,6 @@ const {
   fetchBggGames,
 } = require('../integrations/bgg/bggGames')
 
-// -----------------------------------------------------------------------------
-// Controlled Shuffled BoardGameGeek catalogue
-// -----------------------------------------------------------------------------
-
 const DEFAULT_BGG_GAME_IDS = [
   '178900',
   '9209',
@@ -24,24 +20,35 @@ const DEFAULT_BGG_GAME_IDS = [
   '290448',
 ]
 
-// -----------------------------------------------------------------------------
-// BoardGameGeek game data source
-// -----------------------------------------------------------------------------
-
 function createBggGameDataSource({
   ids = DEFAULT_BGG_GAME_IDS,
   fetchGamesImpl = fetchBggGames,
 } = {}) {
   return {
     async getGames() {
-      return fetchGamesImpl(ids)
+      try {
+        return await fetchGamesImpl(ids)
+      } catch (error) {
+        if (
+          error.code ===
+          'BGG_UNAVAILABLE'
+        ) {
+          const unavailableError =
+            new Error(
+              'Recommendation data is temporarily unavailable',
+            )
+
+          unavailableError.code =
+            'RECOMMENDATION_UNAVAILABLE'
+
+          throw unavailableError
+        }
+
+        throw error
+      }
     },
   }
 }
-
-// -----------------------------------------------------------------------------
-// Module exports
-// -----------------------------------------------------------------------------
 
 module.exports = {
   createBggGameDataSource,

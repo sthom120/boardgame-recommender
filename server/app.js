@@ -71,7 +71,7 @@ function createApp({
     },
   )
 
-  // ---------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------
   // Error handling
   // ---------------------------------------------------------------------------
 
@@ -85,6 +85,21 @@ function createApp({
         error: 'invalid_json',
         message:
           'The request body contains invalid JSON.',
+      })
+    }
+
+    if (
+      error.code ===
+      'RECOMMENDATION_UNAVAILABLE'
+    ) {
+      console.error(error)
+
+      return res.status(503).json({
+        error:
+          'recommendation_unavailable',
+
+        message:
+          'Recommendations are temporarily unavailable. Please try again shortly.',
       })
     }
 

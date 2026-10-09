@@ -283,10 +283,22 @@ async function fetchBggThingsXml(
       attempt < MAX_ATTEMPTS
 
     if (!shouldRetry) {
-      throw new Error(
-        `BGG API request failed with status ${response.status}`,
-      )
-    }
+  const error =
+    new Error(
+      `BGG API request failed with status ${response.status}`,
+    )
+
+  if (
+    isTemporaryFailure(
+      response.status,
+    )
+  ) {
+    error.code =
+      'BGG_UNAVAILABLE'
+  }
+
+  throw error
+}
 
     const delay =
       getRetryDelay(attempt)
