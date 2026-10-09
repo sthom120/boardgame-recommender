@@ -151,9 +151,8 @@ function getCachedXml(
     cachedEntry.cachedAt
 
   if (cacheAge >= cacheTtlMs) {
-    cache.delete(cacheKey)
-    return null
-  }
+  return null
+}
 
   return cachedEntry.xml
 }
@@ -239,6 +238,10 @@ async function fetchBggThingsXml(
     return cachedXml
   }
 
+  const staleCachedXml =
+  cache?.get(cacheKey)?.xml ??
+  null
+
   for (
     let attempt = 1;
     attempt <= MAX_ATTEMPTS;
@@ -287,6 +290,33 @@ async function fetchBggThingsXml(
     new Error(
       `BGG API request failed with status ${response.status}`,
     )
+
+    if (!shouldRetry) {
+  if (
+    isTemporaryFailure(
+      response.status,
+    ) &&
+    staleCachedXml !== null
+  ) {
+    return staleCachedXml
+  }
+
+  const error =
+    new Error(
+      `BGG API request failed with status ${response.status}`,
+    )
+
+  if (
+    isTemporaryFailure(
+      response.status,
+    )
+  ) {
+    error.code =
+      'BGG_UNAVAILABLE'
+  }
+
+  throw error
+}
 
   if (
     isTemporaryFailure(
