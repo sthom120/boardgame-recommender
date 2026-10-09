@@ -3,11 +3,13 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  
   "scripts": {
-    "test": "node --test",
-    "dev": "node --watch-path=index.js index.js",
-    "start": "node index.js"
-  },
+  "test": "node --test",
+  "dev": "node index.js",
+  "start": "node index.js"
+},
+
   "keywords": [],
   "author": "",
   "license": "ISC",

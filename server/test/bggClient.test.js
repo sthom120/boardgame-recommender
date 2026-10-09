@@ -185,6 +185,36 @@ test('stops retrying after the maximum number of temporary failures', async () =
   )
 })
 
+
+test('marks an exhausted temporary BGG failure as unavailable', async () => {
+  const fetchImpl = async () => ({
+    ok: false,
+    status: 503,
+  })
+
+  const sleepImpl = async () => {}
+
+  await assert.rejects(
+    () =>
+      fetchBggThingsXml(
+        ['266192'],
+        {
+          token: 'test-token',
+          fetchImpl,
+          sleepImpl,
+        },
+      ),
+    (error) => {
+      assert.equal(
+        error.code,
+        'BGG_UNAVAILABLE',
+      )
+
+      return true
+    },
+  )
+})
+
 test('reuses a cached BGG response for an identical request', async () => {
   let fetchCalls = 0
   const cache = new Map()
@@ -294,6 +324,68 @@ test('refetches BGG data after the cached response expires', async () => {
     '<items call="2"></items>',
   )
 })
+
+
+test('uses stale cached BGG data during a temporary outage', async () => {
+  let currentTime = 1000
+  let upstreamUnavailable = false
+  let fetchCalls = 0
+
+  const cache = new Map()
+
+  const fetchImpl = async () => {
+    fetchCalls += 1
+
+    if (upstreamUnavailable) {
+      return {
+        ok: false,
+        status: 503,
+      }
+    }
+
+    return {
+      ok: true,
+      status: 200,
+      text: async () =>
+        '<items><item id="266192" /></items>',
+    }
+  }
+
+  const options = {
+    token: 'test-token',
+    fetchImpl,
+    cache,
+    cacheTtlMs: 1000,
+    nowImpl: () => currentTime,
+    sleepImpl: async () => {},
+  }
+
+  const firstXml =
+    await fetchBggThingsXml(
+      ['266192'],
+      options,
+    )
+
+  currentTime = 2500
+  upstreamUnavailable = true
+
+  const secondXml =
+    await fetchBggThingsXml(
+      ['266192'],
+      options,
+    )
+
+  assert.equal(
+    secondXml,
+    firstXml,
+  )
+
+  assert.equal(
+    fetchCalls,
+    4,
+  )
+})
+
 
 test('waits between separate BGG API requests when required', async () => {
   const delays = []
