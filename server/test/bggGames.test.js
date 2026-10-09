@@ -34,13 +34,13 @@ test('fetches BGG data and returns normalized app-owned game records', async () 
   const games = await fetchBggGames(
     ['266192'],
     {
-  token: 'test-token',
-  fetchImpl,
-  cache: new Map(),
-  requestState: {
-    lastRequestAt: null,
-  },
-},
+      token: 'test-token',
+      fetchImpl,
+      cache: new Map(),
+      requestState: {
+        lastRequestAt: null,
+      },
+    },
   )
 
   assert.equal(games.length, 1)

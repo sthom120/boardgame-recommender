@@ -334,7 +334,7 @@ function normalizeBggItem(item) {
         ),
     },
 
-    relationships: {
+relationships: {
   baseGameIds: getBaseGameIds(item),
 },
 
