@@ -82,6 +82,49 @@ function recordRequestTime(
     nowImpl()
 }
 
+async function runPacedRequest(
+  requestState,
+  minimumRequestIntervalMs,
+  nowImpl,
+  sleepImpl,
+  requestImpl,
+) {
+  if (!requestState) {
+    return requestImpl()
+  }
+
+  const previousRequest =
+    requestState.requestQueue ??
+    Promise.resolve()
+
+  const currentRequest =
+    previousRequest.then(
+      async () => {
+        await waitForRequestWindow(
+          requestState,
+          minimumRequestIntervalMs,
+          nowImpl,
+          sleepImpl,
+        )
+
+        recordRequestTime(
+          requestState,
+          nowImpl,
+        )
+
+        return requestImpl()
+      },
+    )
+
+  requestState.requestQueue =
+    currentRequest.then(
+      () => undefined,
+      () => undefined,
+    )
+
+  return currentRequest
+}
+
 // -----------------------------------------------------------------------------
 // Cache helpers
 // -----------------------------------------------------------------------------
@@ -201,27 +244,22 @@ async function fetchBggThingsXml(
     attempt <= MAX_ATTEMPTS;
     attempt += 1
   ) {
-    await waitForRequestWindow(
-      requestState,
-      minimumRequestIntervalMs,
-      nowImpl,
-      sleepImpl,
-    )
-
-    recordRequestTime(
-      requestState,
-      nowImpl,
-    )
-
     const response =
-      await fetchImpl(
-        url,
-        {
-          headers: {
-            Authorization:
-              `Bearer ${token}`,
-          },
-        },
+      await runPacedRequest(
+        requestState,
+        minimumRequestIntervalMs,
+        nowImpl,
+        sleepImpl,
+        () =>
+          fetchImpl(
+            url,
+            {
+              headers: {
+                Authorization:
+                  `Bearer ${token}`,
+              },
+            },
+          ),
       )
 
     if (response.ok) {

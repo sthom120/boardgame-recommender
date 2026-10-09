@@ -341,3 +341,63 @@ test('waits between separate BGG API requests when required', async () => {
     [3000],
   )
 })
+
+test('paces concurrent BGG API requests so they do not start together', async () => {
+  const fetchTimes = []
+  const delays = []
+
+  let currentTime = 1000
+
+  const fetchImpl = async () => {
+    fetchTimes.push(currentTime)
+
+    return {
+      ok: true,
+      status: 200,
+      text: async () =>
+        '<items></items>',
+    }
+  }
+
+  const sleepImpl = async (milliseconds) => {
+    delays.push(milliseconds)
+    currentTime += milliseconds
+  }
+
+  const requestState = {
+    lastRequestAt: null,
+  }
+
+  const options = {
+    token: 'test-token',
+    fetchImpl,
+    sleepImpl,
+    nowImpl: () => currentTime,
+    requestState,
+    minimumRequestIntervalMs: 5000,
+  }
+
+  await Promise.all([
+    fetchBggThingsXml(
+      ['266192'],
+      options,
+    ),
+    fetchBggThingsXml(
+      ['9209'],
+      options,
+    ),
+  ])
+
+  assert.deepEqual(
+    fetchTimes,
+    [
+      1000,
+      6000,
+    ],
+  )
+
+  assert.deepEqual(
+    delays,
+    [5000],
+  )
+})
