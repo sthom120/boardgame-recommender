@@ -12,6 +12,9 @@ const MAX_ATTEMPTS = 3
 const DEFAULT_CACHE_TTL_MS =
   24 * 60 * 60 * 1000
 
+const DEFAULT_MINIMUM_REQUEST_INTERVAL_MS =
+  5000
+
 const TEMPORARY_FAILURE_STATUSES = [
   500,
   503,
@@ -38,6 +41,48 @@ function getRetryDelay(attemptNumber) {
 }
 
 // -----------------------------------------------------------------------------
+// Request pacing helpers
+// -----------------------------------------------------------------------------
+
+async function waitForRequestWindow(
+  requestState,
+  minimumRequestIntervalMs,
+  nowImpl,
+  sleepImpl,
+) {
+  if (
+    !requestState ||
+    requestState.lastRequestAt === null
+  ) {
+    return
+  }
+
+  const elapsed =
+    nowImpl() -
+    requestState.lastRequestAt
+
+  const remaining =
+    minimumRequestIntervalMs -
+    elapsed
+
+  if (remaining > 0) {
+    await sleepImpl(remaining)
+  }
+}
+
+function recordRequestTime(
+  requestState,
+  nowImpl,
+) {
+  if (!requestState) {
+    return
+  }
+
+  requestState.lastRequestAt =
+    nowImpl()
+}
+
+// -----------------------------------------------------------------------------
 // Cache helpers
 // -----------------------------------------------------------------------------
 
@@ -59,7 +104,8 @@ function getCachedXml(
   }
 
   const cacheAge =
-    currentTime - cachedEntry.cachedAt
+    currentTime -
+    cachedEntry.cachedAt
 
   if (cacheAge >= cacheTtlMs) {
     cache.delete(cacheKey)
@@ -102,6 +148,9 @@ async function fetchBggThingsXml(
     cacheTtlMs =
       DEFAULT_CACHE_TTL_MS,
     nowImpl = Date.now,
+    requestState = null,
+    minimumRequestIntervalMs =
+      DEFAULT_MINIMUM_REQUEST_INTERVAL_MS,
   } = {},
 ) {
   if (!token) {
@@ -152,6 +201,18 @@ async function fetchBggThingsXml(
     attempt <= MAX_ATTEMPTS;
     attempt += 1
   ) {
+    await waitForRequestWindow(
+      requestState,
+      minimumRequestIntervalMs,
+      nowImpl,
+      sleepImpl,
+    )
+
+    recordRequestTime(
+      requestState,
+      nowImpl,
+    )
+
     const response =
       await fetchImpl(
         url,

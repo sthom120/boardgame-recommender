@@ -7,10 +7,14 @@ const {
 } = require('./bggNormalizer')
 
 // -----------------------------------------------------------------------------
-// Shared BGG response cache
+// Shared BGG integration state
 // -----------------------------------------------------------------------------
 
 const sharedBggCache = new Map()
+
+const sharedBggRequestState = {
+  lastRequestAt: null,
+}
 
 // -----------------------------------------------------------------------------
 // Normalized BGG game boundary
@@ -20,6 +24,8 @@ async function fetchBggGames(
   ids,
   {
     cache = sharedBggCache,
+    requestState =
+      sharedBggRequestState,
     ...clientOptions
   } = {},
 ) {
@@ -28,6 +34,7 @@ async function fetchBggGames(
     {
       ...clientOptions,
       cache,
+      requestState,
     },
   )
 

@@ -294,3 +294,50 @@ test('refetches BGG data after the cached response expires', async () => {
     '<items call="2"></items>',
   )
 })
+
+test('waits between separate BGG API requests when required', async () => {
+  const delays = []
+  let currentTime = 1000
+
+  const fetchImpl = async () => ({
+    ok: true,
+    status: 200,
+    text: async () =>
+      '<items></items>',
+  })
+
+  const sleepImpl = async (milliseconds) => {
+    delays.push(milliseconds)
+    currentTime += milliseconds
+  }
+
+  const requestState = {
+    lastRequestAt: null,
+  }
+
+  const options = {
+    token: 'test-token',
+    fetchImpl,
+    sleepImpl,
+    nowImpl: () => currentTime,
+    requestState,
+    minimumRequestIntervalMs: 5000,
+  }
+
+  await fetchBggThingsXml(
+    ['266192'],
+    options,
+  )
+
+  currentTime += 2000
+
+  await fetchBggThingsXml(
+    ['9209'],
+    options,
+  )
+
+  assert.deepEqual(
+    delays,
+    [3000],
+  )
+})
