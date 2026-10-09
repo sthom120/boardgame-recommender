@@ -4,9 +4,11 @@ A portfolio project that recommends board games using BoardGameGeek data and exp
 
 ## Project Status
 
-The project is currently in active MVP development.
+Shuffled is in active MVP development.
 
-Planning, requirements, API contracts, recommendation rules, accessibility standards and BoardGameGeek technical validation are documented under `docs/`.
+The complete questionnaire, review flow, results UI, transparent recommendation engine and live BoardGameGeek integration are implemented. Current work is focused on finishing the local development workflow, scaling the candidate catalogue beyond the original technical-spike set, then tuning recommendation quality against a realistic catalogue.
+
+See `docs/mvp-sprint-plan.md` for the current delivery plan from this checkpoint to the public MVP.
 
 ## Tech Stack
 
@@ -64,7 +66,7 @@ to:
 server/.env
 ```
 
-The current scaffold does not require BoardGameGeek credentials.
+The live BGG-backed recommendation path requires a valid server-side `BGG_API_TOKEN`.
 
 The backend defaults to port `3001` if no `PORT` value is provided.
 
@@ -72,18 +74,27 @@ Never commit real API credentials or secrets.
 
 ### Run the application
 
-From the repository root:
+The intended combined development command is:
 
 ```bash
 npm run dev
 ```
 
-This starts:
+A Windows watch-process issue is currently tracked in GitHub Issue #38. Until that is fixed, run the two processes separately:
 
-- the React/Vite frontend at `http://localhost:5173`
-- the Express backend at `http://localhost:3001`
+Terminal 1:
 
-During local development, Vite proxies frontend requests beginning with `/api` to the Express backend.
+```bash
+npm start --prefix server
+```
+
+Terminal 2:
+
+```bash
+npm run dev --prefix client
+```
+
+The frontend runs at `http://localhost:5173` and proxies `/api` requests to the Express backend at `http://localhost:3001`.
 
 ### Health check
 
@@ -95,8 +106,6 @@ GET /api/health
 
 A successful response confirms that the API is running.
 
-The current frontend scaffold also calls this endpoint and displays the backend connection status.
-
 ## Useful Commands
 
 From the repository root:
@@ -106,12 +115,14 @@ npm run dev
 npm run dev:client
 npm run dev:server
 npm run lint
+npm test --prefix server
 ```
 
 ## Documentation
 
 Important project documentation includes:
 
+- `docs/mvp-sprint-plan.md`
 - `docs/project-brief.md`
 - `docs/requirements.md`
 - `docs/recommendation-engine.md`
@@ -122,16 +133,31 @@ Important project documentation includes:
 
 ## Current MVP Direction
 
-The first working vertical slice will support:
+The working vertical slice is now:
 
 ```text
 Landing page
 → Recommendation questionnaire
 → Review answers
 → Backend recommendation request
+→ Live normalized BGG data
+→ Transparent recommendation engine
 → Recommendation results
 ```
 
-Initial development uses deterministic mock data so frontend and recommendation work do not depend on live BoardGameGeek availability.
+The original controlled BGG catalogue is retained for technical validation and deterministic testing, but it is not the intended MVP catalogue.
 
-Live BGG integration and the full transparent recommendation engine are implemented in later development stages.
+The next delivery stages are:
+
+```text
+finish integration/dev workflow
+→ scalable local catalogue (~100 development records)
+→ recommendation-quality tuning
+→ grow toward ~300–500 MVP games
+→ result/accessibility quality
+→ CI
+→ deployment
+→ portfolio polish
+```
+
+The catalogue targets are delivery stages rather than hard architectural limits.
