@@ -6,7 +6,7 @@ A portfolio project that recommends board games using BoardGameGeek data and exp
 
 Shuffled is in active MVP development.
 
-The complete questionnaire, review flow, results UI, transparent recommendation engine and live BoardGameGeek integration are implemented. Current work is focused on finishing the local development workflow, scaling the candidate catalogue beyond the original technical-spike set, then tuning recommendation quality against a realistic catalogue.
+The complete questionnaire, review flow, results UI, transparent recommendation engine and live BoardGameGeek integration are implemented. Sprint 1 integration/dev-workflow work is complete. Current work is Sprint 2: building a persisted SQLite catalogue, importing a realistic development set, then tuning recommendation quality against that larger catalogue.
 
 See `docs/mvp-sprint-plan.md` for the current delivery plan from this checkpoint to the public MVP.
 
@@ -17,6 +17,7 @@ See `docs/mvp-sprint-plan.md` for the current delivery plan from this checkpoint
 - Node.js
 - Express
 - BoardGameGeek XML API2
+- SQLite via Node's built-in `node:sqlite`
 - GitHub Issues and Projects for project management
 
 ## Project Structure
@@ -80,18 +81,10 @@ The intended combined development command is:
 npm run dev
 ```
 
-A Windows watch-process issue is currently tracked in GitHub Issue #38. Until that is fixed, run the two processes separately:
-
-Terminal 1:
+The combined development workflow is working:
 
 ```bash
-npm start --prefix server
-```
-
-Terminal 2:
-
-```bash
-npm run dev --prefix client
+npm run dev
 ```
 
 The frontend runs at `http://localhost:5173` and proxies `/api` requests to the Express backend at `http://localhost:3001`.
@@ -150,8 +143,7 @@ The original controlled BGG catalogue is retained for technical validation and d
 The next delivery stages are:
 
 ```text
-finish integration/dev workflow
-→ scalable local catalogue (~100 development records)
+scalable SQLite catalogue (~100 development records)
 → recommendation-quality tuning
 → grow toward ~300–500 MVP games
 → result/accessibility quality
