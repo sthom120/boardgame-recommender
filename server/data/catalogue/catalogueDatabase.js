@@ -5,6 +5,12 @@ const {
   DatabaseSync,
 } = require('node:sqlite')
 
+const {
+  getCatalogueDatabasePath,
+} = require(
+  '../../config/catalogueConfig',
+)
+
 // -----------------------------------------------------------------------------
 // Catalogue schema
 // -----------------------------------------------------------------------------
@@ -40,10 +46,22 @@ function openCatalogueDatabase({
   }
 }
 
+function openConfiguredCatalogueDatabase({
+  env = process.env,
+} = {}) {
+  const databasePath =
+    getCatalogueDatabasePath(env)
+
+  return openCatalogueDatabase({
+    databasePath,
+  })
+}
+
 // -----------------------------------------------------------------------------
 // Module exports
 // -----------------------------------------------------------------------------
 
 module.exports = {
   openCatalogueDatabase,
+  openConfiguredCatalogueDatabase,
 }
