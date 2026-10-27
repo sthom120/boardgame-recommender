@@ -89,3 +89,63 @@ test(
     )
   },
 )
+
+test(
+  'fetches BGG batches sequentially',
+  async () => {
+    const ids = Array.from(
+      {
+        length: 25,
+      },
+      (_, index) =>
+        String(index + 1),
+    )
+
+    let activeRequests = 0
+    let maximumActiveRequests = 0
+
+    const fetchGamesImpl =
+      async (batchIds) => {
+        activeRequests += 1
+
+        maximumActiveRequests =
+          Math.max(
+            maximumActiveRequests,
+            activeRequests,
+          )
+
+        await new Promise(
+          (resolve) =>
+            setTimeout(
+              resolve,
+              10,
+            ),
+        )
+
+        activeRequests -= 1
+
+        return batchIds.map(
+          (id) => ({
+            id: `game-${id}`,
+          }),
+        )
+      }
+
+    const repository = {
+      upsertGame() {},
+    }
+
+    await importCatalogue({
+      ids,
+      repository,
+      fetchGamesImpl,
+      importedAt:
+        '2026-10-27T00:00:00Z',
+    })
+
+    assert.equal(
+      maximumActiveRequests,
+      1,
+    )
+  },
+)
