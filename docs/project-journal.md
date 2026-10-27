@@ -128,3 +128,46 @@ The 300–500 figure is a first-MVP delivery target, not an architectural ceilin
 - The combined `npm run dev` workflow currently fails because the backend watch process exits; this is tracked separately in #38.
 - Issue #26 remains the integration checkpoint and should close after its implementation is merged and the normal development workflow is verified.
 - `docs/mvp-sprint-plan.md` is now the working sprint plan to MVP.
+
+
+## 2026-10-26 — Repository review and Sprint 2 catalogue checkpoint
+
+### Completed since the previous checkpoint
+- Merged PR #43 and closed Issues #26 and #38.
+- Verified the combined `npm run dev` workflow and live browser recommendation path.
+- Chose SQLite for the persisted Shuffled catalogue and recorded ADR 002.
+- Defined the catalogue schema with separate BGG-derived and Shuffled-owned metadata.
+- Added schema tests and a catalogue repository with round-trip coverage.
+- Verified that BGG re-imports do not overwrite Shuffled-owned content classification.
+- Reached 130 passing server tests.
+- Pushed the current Sprint 2 work on `data/scalable-catalogue`.
+
+### Full-repository review findings
+A repository-wide review assessed product usability, architecture, recommendation quality, accessibility, testing, deployment readiness and portfolio value.
+
+The project is best described as a working technical alpha with a strong portfolio foundation rather than a public-ready MVP.
+
+Important findings assigned into the sprint plan:
+- Family-friendly filtering requires populated Shuffled-owned content metadata because live BGG-normalized records default to `unknown`.
+- Complexity scoring and displayed complexity labels should share one source of truth.
+- Mood/style mappings should be reviewed for accidental double-counting of time/complexity evidence.
+- Result cards currently duplicate explanation content and need a clearer repeat-use path.
+- Primary blue/violet UI treatments need formal contrast verification.
+- Review/results focus management needs a deliberate accessibility pass.
+- Frontend/E2E tests and CI remain a material gap despite strong backend coverage.
+- Deployment must explicitly support the Node runtime required by `node:sqlite` and a suitable SQLite catalogue-file strategy.
+- Repository polish should remove stale scaffold files/instructions and resolve license metadata inconsistency.
+- The BGG client contains a duplicated exhausted-retry block that should be simplified while retaining regression coverage.
+
+### Current direction
+Continue Sprint 2 rather than switching to cosmetic polish or recommendation tuning early.
+
+Immediate sequence:
+1. Add the SQLite catalogue data source.
+2. Implement batched BGG import/update.
+3. Build a curated source list and Shuffled-owned content metadata workflow.
+4. Populate approximately 100 varied development records.
+5. Switch normal recommendations to the local catalogue.
+6. Re-run browser scenarios, then begin Sprint 3 ranking-quality work.
+
+The updated `docs/mvp-sprint-plan.md` is the source of truth for these review-driven additions.
