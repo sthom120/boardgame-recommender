@@ -114,6 +114,12 @@ function createGame() {
       classification:
         'family-friendly',
     },
+
+    availability: {
+      region: 'AU',
+      status: 'unknown',
+      checkedAt: null,
+},
   }
 }
 
@@ -205,6 +211,59 @@ test(
         games[0].content
           .classification,
         'mature',
+      )
+    } finally {
+      db.close()
+    }
+  },
+)
+
+test(
+  'returns Shuffled availability metadata with included games',
+  () => {
+    const db = createDatabase()
+
+    try {
+      const repository =
+        createCatalogueRepository({
+          db,
+        })
+
+      const game = createGame()
+
+      repository.upsertGame(
+        game,
+        {
+          importedAt:
+            '2026-10-27T00:00:00Z',
+        },
+      )
+
+      db.prepare(`
+        UPDATE catalogue_entries
+        SET
+          availability_region = ?,
+          availability_status = ?,
+          availability_checked_at = ?
+        WHERE game_id = ?
+      `).run(
+        'AU',
+        'available',
+        '2026-10-27T05:00:00Z',
+        game.id,
+      )
+
+      const games =
+        repository.getIncludedGames()
+
+      assert.deepEqual(
+        games[0].availability,
+        {
+          region: 'AU',
+          status: 'available',
+          checkedAt:
+            '2026-10-27T05:00:00Z',
+        },
       )
     } finally {
       db.close()

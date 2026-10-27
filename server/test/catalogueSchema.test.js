@@ -174,3 +174,108 @@ test(
     }
   },
 )
+
+test(
+  'stores Australian availability metadata with safe defaults',
+  () => {
+    const db = createDatabase()
+
+    try {
+      db.prepare(`
+        INSERT INTO games (
+          id,
+          source_provider,
+          source_external_id
+        )
+        VALUES (?, ?, ?)
+      `).run(
+        'game-30549',
+        'boardgamegeek',
+        '30549',
+      )
+
+      db.prepare(`
+        INSERT INTO catalogue_entries (
+          game_id,
+          imported_at
+        )
+        VALUES (?, ?)
+      `).run(
+        'game-30549',
+        '2026-10-27T00:00:00Z',
+      )
+
+      const entry = db
+        .prepare(`
+          SELECT
+            availability_region,
+            availability_status,
+            availability_checked_at
+          FROM catalogue_entries
+          WHERE game_id = ?
+        `)
+        .get(
+          'game-30549',
+        )
+
+      assert.equal(
+        entry.availability_region,
+        'AU',
+      )
+
+      assert.equal(
+        entry.availability_status,
+        'unknown',
+      )
+
+      assert.equal(
+        entry.availability_checked_at,
+        null,
+      )
+    } finally {
+      db.close()
+    }
+  },
+)
+
+test(
+  'rejects unsupported availability statuses',
+  () => {
+    const db = createDatabase()
+
+    try {
+      db.prepare(`
+        INSERT INTO games (
+          id,
+          source_provider,
+          source_external_id
+        )
+        VALUES (?, ?, ?)
+      `).run(
+        'game-30549',
+        'boardgamegeek',
+        '30549',
+      )
+
+      assert.throws(
+        () => {
+          db.prepare(`
+            INSERT INTO catalogue_entries (
+              game_id,
+              availability_status,
+              imported_at
+            )
+            VALUES (?, ?, ?)
+          `).run(
+            'game-30549',
+            'discontinued-maybe',
+            '2026-10-27T00:00:00Z',
+          )
+        },
+        /CHECK constraint failed/,
+      )
+    } finally {
+      db.close()
+    }
+  },
+)

@@ -67,6 +67,22 @@ CREATE TABLE IF NOT EXISTS catalogue_entries (
       is_included IN (0, 1)
     ),
 
+  availability_region TEXT NOT NULL DEFAULT 'AU',
+
+  availability_status TEXT NOT NULL DEFAULT 'unknown'
+    CHECK (
+      availability_status IN (
+        'unknown',
+        'widely-available',
+        'available',
+        'limited',
+        'preorder',
+        'out-of-print'
+      )
+    ),
+
+  availability_checked_at TEXT,
+
   imported_at TEXT NOT NULL,
 
   FOREIGN KEY (game_id)

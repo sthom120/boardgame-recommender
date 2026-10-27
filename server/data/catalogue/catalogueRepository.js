@@ -105,9 +105,20 @@ function rowToGame(row) {
     },
 
     content: {
-      classification:
-        row.content_classification,
-    },
+  classification:
+    row.content_classification,
+},
+
+availability: {
+  region:
+    row.availability_region,
+
+  status:
+    row.availability_status,
+
+  checkedAt:
+    row.availability_checked_at,
+},
   }
 }
 
@@ -227,8 +238,11 @@ function createCatalogueRepository({
   const getIncludedGamesStatement =
     db.prepare(`
       SELECT
-        games.*,
-        catalogue_entries.content_classification
+  games.*,
+  catalogue_entries.content_classification,
+  catalogue_entries.availability_region,
+  catalogue_entries.availability_status,
+  catalogue_entries.availability_checked_at
       FROM games
       INNER JOIN catalogue_entries
         ON catalogue_entries.game_id =
