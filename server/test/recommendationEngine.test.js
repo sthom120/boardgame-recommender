@@ -2045,3 +2045,47 @@ test('scenario 7 combines two mood and two style preferences without increasing 
 
   assert.equal(response.resultState, 'matches')
 })
+
+test(
+  'excludes an Australian game marked out of print',
+  () => {
+    const game = {
+      relationships: {
+        baseGameIds: [],
+      },
+
+      playerRange: {
+        min: 2,
+        max: 4,
+      },
+
+      age: {
+        publisherMinimum: 8,
+      },
+
+      availability: {
+        region: 'AU',
+        status: 'out-of-print',
+        checkedAt:
+          '2026-10-27T00:00:00Z',
+      },
+    }
+
+    const answers = {
+      players: 3,
+      youngestPlayerAge: 10,
+    }
+
+    assert.deepEqual(
+      checkEligibility(
+        game,
+        answers,
+      ),
+      {
+        eligible: false,
+        reason:
+          'availability-out-of-print',
+      },
+    )
+  },
+)

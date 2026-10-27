@@ -1324,6 +1324,19 @@ function checkEligibility(game, answers) {
     }
   }
 
+  // Australian availability eligibility
+  if (
+    game?.availability?.region === 'AU' &&
+    game?.availability?.status ===
+      'out-of-print'
+  ) {
+    return {
+      eligible: false,
+      reason:
+        'availability-out-of-print',
+  }
+}
+
   // Player-count eligibility
   const minPlayers = game?.playerRange?.min
   const maxPlayers = game?.playerRange?.max
