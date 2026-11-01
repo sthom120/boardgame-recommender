@@ -149,3 +149,57 @@ test(
     )
   },
 )
+
+
+test(
+  'reports a failed batch while preserving earlier imports',
+  async () => {
+    const ids = Array.from(
+      { length: 45 },
+      (_, index) => String(index + 1),
+    )
+
+    const importedIds = []
+    const requestedBatches = []
+    const originalError = new Error('BGG unavailable')
+
+    const fetchGamesImpl = async (batchIds) => {
+      requestedBatches.push(batchIds)
+
+      if (requestedBatches.length === 2) {
+        throw originalError
+      }
+
+      return batchIds.map((id) => ({
+        id: `game-${id}`,
+      }))
+    }
+
+    const repository = {
+      upsertGame(game) {
+        importedIds.push(game.id)
+      },
+    }
+
+    await assert.rejects(
+      importCatalogue({
+        ids,
+        repository,
+        fetchGamesImpl,
+      }),
+      (error) => {
+        assert.equal(error.failedBatchNumber, 2)
+        assert.equal(error.importedCount, 20)
+        assert.equal(error.cause, originalError)
+        return true
+      },
+    )
+
+    assert.equal(importedIds.length, 20)
+
+    assert.deepEqual(
+      requestedBatches.map((batch) => batch.length),
+      [20, 20],
+    )
+  },
+)
