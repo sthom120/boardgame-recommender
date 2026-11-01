@@ -1337,6 +1337,19 @@ function checkEligibility(game, answers) {
   }
 }
 
+  
+  // Exclude games with explicitly unverified Australian availability
+  if (
+    game?.availability?.region === 'AU' &&
+    game?.availability?.status === 'unknown'
+  ) {
+    return {
+      eligible: false,
+      reason: 'availability-unverified',
+    }
+  }
+
+
   // Player-count eligibility
   const minPlayers = game?.playerRange?.min
   const maxPlayers = game?.playerRange?.max
@@ -1354,6 +1367,19 @@ function checkEligibility(game, answers) {
       reason: 'player-count-out-of-range',
     }
   }
+
+  
+  // Exclude games that are only available for preorder
+  if (
+    game?.availability?.region === 'AU' &&
+    game?.availability?.status === 'preorder'
+  ) {
+    return {
+      eligible: false,
+      reason: 'availability-preorder',
+    }
+  }
+
 
   // Age eligibility
   const publisherMinimumAge = game?.age?.publisherMinimum

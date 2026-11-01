@@ -2089,3 +2089,87 @@ test(
     )
   },
 )
+
+test(
+  'excludes an Australian game with unverified availability',
+  () => {
+    const game = {
+      relationships: {
+        baseGameIds: [],
+      },
+
+      playerRange: {
+        min: 2,
+        max: 4,
+      },
+
+      age: {
+        publisherMinimum: 8,
+      },
+
+      availability: {
+        region: 'AU',
+        status: 'unknown',
+        checkedAt: null,
+      },
+    }
+
+    const answers = {
+      players: 3,
+      youngestPlayerAge: 10,
+    }
+
+    assert.deepEqual(
+      checkEligibility(
+        game,
+        answers,
+      ),
+      {
+        eligible: false,
+        reason:
+          'availability-unverified',
+      },
+    )
+  },
+)
+
+
+test(
+  'excludes an Australian game available only for preorder',
+  () => {
+    const game = {
+      relationships: {
+        baseGameIds: [],
+      },
+
+      playerRange: {
+        min: 2,
+        max: 4,
+      },
+
+      age: {
+        publisherMinimum: 8,
+      },
+
+      availability: {
+        region: 'AU',
+        status: 'preorder',
+        checkedAt:
+          '2026-10-29T00:00:00Z',
+      },
+    }
+
+    const answers = {
+      players: 3,
+      youngestPlayerAge: 10,
+    }
+
+    assert.deepEqual(
+      checkEligibility(game, answers),
+      {
+        eligible: false,
+        reason: 'availability-preorder',
+      },
+    )
+  },
+)
