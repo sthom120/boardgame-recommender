@@ -203,3 +203,54 @@ test(
     )
   },
 )
+
+
+test(
+  'imports games from the curated catalogue list',
+  async () => {
+    const {
+      importCuratedCatalogue,
+    } = require('../data/catalogue/catalogueImporter')
+
+    const curatedGames = require(
+      '../data/catalogue/curatedGames.json'
+    )
+
+    const requestedBatches = []
+    const importedIds = []
+
+    const fetchGamesImpl = async (ids) => {
+      requestedBatches.push([...ids])
+
+      return ids.map((id) => ({
+        id: `game-${id}`,
+      }))
+    }
+
+    const repository = {
+      upsertGame(game) {
+        importedIds.push(game.id)
+      },
+    }
+
+    await importCuratedCatalogue({
+      repository,
+      fetchGamesImpl,
+      importedAt: '2026-10-29T00:00:00Z',
+    })
+
+    const expectedIds = curatedGames.map(
+      (game) => game.bggId
+    )
+
+    assert.deepEqual(
+      requestedBatches,
+      [expectedIds],
+    )
+
+    assert.deepEqual(
+      importedIds,
+      expectedIds.map((id) => `game-${id}`),
+    )
+  },
+)

@@ -63,10 +63,32 @@ async function importCatalogue({
 }
 
 
+
+async function importCuratedCatalogue({
+  repository,
+  fetchGamesImpl,
+  importedAt,
+}) {
+  const curatedGames = require('./curatedGames.json')
+
+  const ids = curatedGames.map(
+    (game) => game.bggId
+  )
+
+  return importCatalogue({
+    ids,
+    repository,
+    fetchGamesImpl,
+    importedAt,
+  })
+}
+
+
 // -----------------------------------------------------------------------------
 // Module exports
 // -----------------------------------------------------------------------------
 
 module.exports = {
   importCatalogue,
+  importCuratedCatalogue,
 }
